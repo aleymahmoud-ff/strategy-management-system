@@ -8,13 +8,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: "Credentials",
       credentials: {
-        login: { label: "Email or Username", type: "text" },
+        email: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.login || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) return null;
 
-        const login = (credentials.login as string).trim();
+        const login = (credentials.email as string).trim();
         const isEmail = login.includes("@");
 
         const user = await prisma.user.findFirst({
