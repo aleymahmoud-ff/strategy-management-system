@@ -339,7 +339,7 @@ export default function DivisionPlanPage() {
           </button>
           <div>
             <h1 className="animate-fade-in-up font-heading text-[26px] font-bold text-text-hd">
-              {division?.name || "Division"} Plan
+              {division?.name || "Department"} Plan
             </h1>
             <p className="mt-0.5 text-[13px] text-text-sub">
               {division?.headName} &middot; Objectives with targets & key actions

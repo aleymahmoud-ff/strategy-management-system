@@ -19,7 +19,7 @@ export function KpiCards({
     {
       label: "Submissions",
       value: `${submissionsCount}/${totalDivisions}`,
-      sub: "Divisions submitted",
+      sub: "Departments submitted",
       accent: "bg-brown",
       glow: "rgba(201, 162, 77, 0.12)",
     },

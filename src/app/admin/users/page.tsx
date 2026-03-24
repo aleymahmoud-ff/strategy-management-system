@@ -216,7 +216,7 @@ export default function UsersPage() {
         <div>
           <h1 className="animate-fade-in-up font-heading text-[32px] font-bold text-text-hd">User Management</h1>
           <p className="mt-1 text-[13px] text-text-sub">
-            Manage user accounts, roles, and division assignments
+            Manage user accounts, roles, and department assignments
           </p>
         </div>
         <button
@@ -238,7 +238,7 @@ export default function UsersPage() {
                 <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Name</th>
                 <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Email</th>
                 <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Role</th>
-                <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Assigned Divisions</th>
+                <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Assigned Departments</th>
                 <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">Actions</th>
               </tr>
             </thead>
@@ -352,18 +352,18 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Division Assignments Modal */}
+      {/* Department Assignments Modal */}
       {showAssignments && assignUser && (
         <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center">
           <div className="animate-scale-in w-full max-w-lg rounded-xl border border-border bg-bg-card p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
-            <h3 className="mb-1 font-heading text-xl font-bold text-text-hd">Division Assignments</h3>
+            <h3 className="mb-1 font-heading text-xl font-bold text-text-hd">Department Assignments</h3>
             <p className="mb-6 text-[13px] text-text-sub">
-              Assign <strong>{assignUser.name}</strong> to divisions with Edit or View Only access
+              Assign <strong>{assignUser.name}</strong> to departments with Edit or View Only access
             </p>
 
             <div className="flex flex-col gap-3">
               {tempAssignments.length === 0 && (
-                <p className="py-4 text-center text-[13px] text-text-mut">No divisions assigned</p>
+                <p className="py-4 text-center text-[13px] text-text-mut">No departments assigned</p>
               )}
               {tempAssignments.map((a, idx) => (
                 <div key={idx} className="flex items-center gap-3">
@@ -404,7 +404,7 @@ export default function UsersPage() {
                 onClick={addAssignment}
                 className="mt-3 text-[12px] font-semibold text-brown hover:underline"
               >
-                + Add Division
+                + Add Department
               </button>
             )}
 

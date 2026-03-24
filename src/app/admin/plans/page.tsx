@@ -111,14 +111,14 @@ export default function PlansOverviewPage() {
         <div>
           <h1 className="animate-fade-in-up font-heading text-[30px] font-bold text-text-hd">Plan Builder</h1>
           <p className="mt-1 text-[13px] text-text-sub">
-            Manage divisions, define strategic objectives, targets, and key actions
+            Manage departments, define strategic objectives, targets, and key actions
           </p>
         </div>
         <button
           onClick={openCreate}
           className="rounded-lg bg-brown px-5 py-2.5 text-[13px] font-semibold text-bg-page hover:bg-brown-dk hover:shadow-[0_0_20px_rgba(201,162,77,0.2)]"
         >
-          + Add Division
+          + Add Department
         </button>
       </div>
 
@@ -126,15 +126,15 @@ export default function PlansOverviewPage() {
         <div className="py-16 text-center text-text-sub">Loading...</div>
       ) : divisions.length === 0 ? (
         <div className="rounded-xl border border-border bg-bg-card p-16 text-center shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
-          <p className="text-[15px] font-medium text-text-bd">No divisions yet</p>
+          <p className="text-[15px] font-medium text-text-bd">No departments yet</p>
           <p className="mt-1 text-[13px] text-text-sub">
-            Create your first division to start building functional plans
+            Create your first department to start building functional plans
           </p>
           <button
             onClick={openCreate}
             className="mt-4 rounded-lg bg-brown px-5 py-2.5 text-[13px] font-semibold text-bg-page hover:bg-brown-dk hover:shadow-[0_0_20px_rgba(201,162,77,0.2)]"
           >
-            + Add Division
+            + Add Department
           </button>
         </div>
       ) : (
@@ -149,7 +149,7 @@ export default function PlansOverviewPage() {
                 <button
                   onClick={() => openEdit(div)}
                   className="rounded-md px-2 py-1 text-[11px] font-medium text-info hover:bg-bg-mid"
-                  title="Edit division"
+                  title="Edit department"
                 >
                   Edit
                 </button>
@@ -157,7 +157,7 @@ export default function PlansOverviewPage() {
                   <button
                     onClick={() => { setDeleteTarget(div); setDeleteError(""); }}
                     className="rounded-md px-2 py-1 text-[11px] font-medium text-red hover:bg-red-bg"
-                    title="Delete division"
+                    title="Delete department"
                   >
                     Delete
                   </button>
@@ -202,12 +202,12 @@ export default function PlansOverviewPage() {
         <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center">
           <div className="animate-scale-in w-full max-w-md rounded-xl border border-border bg-bg-card p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
             <h3 className="mb-6 font-heading text-xl font-bold text-text-hd">
-              {editingId ? "Edit Division" : "New Division"}
+              {editingId ? "Edit Department" : "New Department"}
             </h3>
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Division Name</label>
+                <label className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Department Name</label>
                 <input
                   type="text"
                   value={form.name}
@@ -218,7 +218,7 @@ export default function PlansOverviewPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Division Head</label>
+                <label className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Department Head</label>
                 <input
                   type="text"
                   value={form.headName}
@@ -259,7 +259,7 @@ export default function PlansOverviewPage() {
                 disabled={saving}
                 className="rounded-lg bg-brown px-6 py-2.5 text-[13px] font-semibold text-bg-page hover:bg-brown-dk hover:shadow-[0_0_20px_rgba(201,162,77,0.2)] disabled:opacity-50"
               >
-                {saving ? "Saving..." : editingId ? "Save Changes" : "Create Division"}
+                {saving ? "Saving..." : editingId ? "Save Changes" : "Create Department"}
               </button>
             </div>
           </div>
@@ -276,10 +276,10 @@ export default function PlansOverviewPage() {
               </svg>
             </div>
 
-            <h3 className="mt-4 font-heading text-lg font-bold text-text-hd">Delete Division</h3>
+            <h3 className="mt-4 font-heading text-lg font-bold text-text-hd">Delete Department</h3>
             <p className="mt-2 text-[13px] leading-relaxed text-text-sub">
               Are you sure you want to delete <strong className="text-text-bd">{deleteTarget.name}</strong>?
-              This will permanently remove all its objectives and key actions.
+              This will permanently remove all its objectives and key actions from this department.
             </p>
 
             {deleteError && (
@@ -300,7 +300,7 @@ export default function PlansOverviewPage() {
                 disabled={saving}
                 className="rounded-lg bg-red px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-red/90 disabled:opacity-50"
               >
-                {saving ? "Deleting..." : "Delete Division"}
+                {saving ? "Deleting..." : "Delete Department"}
               </button>
             </div>
           </div>

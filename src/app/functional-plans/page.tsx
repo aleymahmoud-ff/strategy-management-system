@@ -68,7 +68,7 @@ export default async function FunctionalPlansPage() {
           Functional Plans
         </h1>
         <p className="mt-1 text-[13px] text-text-sub">
-          {period.label} &middot; Select a division to view or submit their plan
+          {period.label} &middot; Select a department to view or submit their plan
         </p>
       </div>
       <DivisionSelector divisions={data} />
