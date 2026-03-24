@@ -1,6 +1,6 @@
 type Props = {
   submissionsCount: number;
-  totalDivisions: number;
+  totalDepartments: number;
   onTrackCount: number;
   totalObjectives: number;
   deviationsCount: number;
@@ -9,7 +9,7 @@ type Props = {
 
 export function KpiCards({
   submissionsCount,
-  totalDivisions,
+  totalDepartments,
   onTrackCount,
   totalObjectives,
   deviationsCount,
@@ -18,7 +18,7 @@ export function KpiCards({
   const cards = [
     {
       label: "Submissions",
-      value: `${submissionsCount}/${totalDivisions}`,
+      value: `${submissionsCount}/${totalDepartments}`,
       sub: "Departments submitted",
       accent: "bg-brown",
       glow: "rgba(201, 162, 77, 0.12)",

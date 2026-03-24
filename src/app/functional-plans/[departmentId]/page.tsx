@@ -35,7 +35,7 @@ type ActionData = {
 
 type FormData = {
   period: { id: string; label: string; deadline: string };
-  division: { id: string; name: string; headName: string; initials: string };
+  department: { id: string; name: string; headName: string; initials: string };
   submission: { id: string; status: string; submittedAt: string | null };
   isLocked: boolean;
   isAdmin: boolean;
@@ -47,7 +47,7 @@ type FormData = {
 type PeriodOption = { id: string; label: string };
 
 export default function SubmissionFormPage() {
-  const { divisionId } = useParams<{ divisionId: string }>();
+  const { departmentId } = useParams<{ departmentId: string }>();
   const router = useRouter();
   const [data, setData] = useState<FormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,8 +78,8 @@ export default function SubmissionFormPage() {
     setLoading(true);
     setSubmitted(false);
     const url = periodId
-      ? `/api/functional-plans/${divisionId}?periodId=${periodId}`
-      : `/api/functional-plans/${divisionId}`;
+      ? `/api/functional-plans/${departmentId}?periodId=${periodId}`
+      : `/api/functional-plans/${departmentId}`;
     fetch(url)
       .then((r) => r.json())
       .then((d) => {
@@ -94,7 +94,7 @@ export default function SubmissionFormPage() {
 
   useEffect(() => {
     loadFormData(selectedPeriodId || undefined);
-  }, [divisionId, selectedPeriodId]);
+  }, [departmentId, selectedPeriodId]);
 
   // Auto-save function
   const saveDraft = useCallback(
@@ -102,7 +102,7 @@ export default function SubmissionFormPage() {
       if (submitted) return;
       setSaving(true);
       try {
-        await fetch(`/api/functional-plans/${divisionId}`, {
+        await fetch(`/api/functional-plans/${departmentId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -126,7 +126,7 @@ export default function SubmissionFormPage() {
       }
       setSaving(false);
     },
-    [divisionId, submitted]
+    [departmentId, submitted]
   );
 
   // Debounced auto-save
@@ -176,7 +176,7 @@ export default function SubmissionFormPage() {
     await saveDraft(data.objectives, data.actions);
     // Then submit
     const res = await fetch(
-      `/api/functional-plans/${divisionId}/submit`,
+      `/api/functional-plans/${departmentId}/submit`,
       { method: "POST" }
     );
     if (res.ok) {
@@ -209,7 +209,7 @@ export default function SubmissionFormPage() {
   if (submitted && data.submission.status === "SUBMITTED" && !data.isAdmin) {
     return (
       <ConfirmationView
-        divisionName={data.division.name}
+        departmentName={data.department.name}
         periodLabel={data.period.label}
         submittedAt={data.submission.submittedAt}
       />
@@ -240,7 +240,7 @@ export default function SubmissionFormPage() {
       )}
 
       <SubmissionBanner
-        division={data.division}
+        department={data.department}
         period={data.period}
         saving={saving}
       />
@@ -249,7 +249,7 @@ export default function SubmissionFormPage() {
       {data.permission === "VIEW_ONLY" && !data.isAdmin && (
         <div className="mb-6 rounded-xl border border-border bg-bg-mid p-4 text-center">
           <div className="text-[13px] font-semibold text-text-sub">
-            You have view-only access to this division. Contact your admin for edit access.
+            You have view-only access to this department. Contact your admin for edit access.
           </div>
         </div>
       )}
@@ -322,7 +322,7 @@ export default function SubmissionFormPage() {
               Confirm Submission
             </h3>
             <p className="mt-2 text-[13px] text-text-sub">
-              You are about to submit the {data.division.name} functional plan
+              You are about to submit the {data.department.name} functional plan
               for {data.period.label}. This action cannot be undone.
             </p>
             <div className="mt-6 flex justify-end gap-3">

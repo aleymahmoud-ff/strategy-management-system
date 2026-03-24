@@ -38,7 +38,7 @@ export function deriveStatus(progress: number): string {
 }
 
 export type Deviation = {
-  division: string;
+  department: string;
   objective: string;
   actual: string;
   target: string;
@@ -49,7 +49,7 @@ export type Deviation = {
 export function computeDeviations(
   entries: Array<{
     achievedValue: string;
-    objective: { statement: string; target: string; division: { name: string } };
+    objective: { statement: string; target: string; department: { name: string } };
   }>
 ): Deviation[] {
   const deviations: Deviation[] = [];
@@ -60,7 +60,7 @@ export function computeDeviations(
     const progress = (achieved / target) * 100;
     if (progress < 80) {
       deviations.push({
-        division: entry.objective.division.name,
+        department: entry.objective.department.name,
         objective: entry.objective.statement,
         actual: entry.achievedValue,
         target: entry.objective.target,

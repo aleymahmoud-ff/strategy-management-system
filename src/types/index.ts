@@ -8,8 +8,8 @@ declare module "next-auth" {
       name: string;
       image: string | null;
       role: "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
-      divisionId: string | null;
-      assignments: { divisionId: string; permission: "EDIT" | "VIEW_ONLY" }[];
+      departmentId: string | null;
+      assignments: { departmentId: string; permission: "EDIT" | "VIEW_ONLY" }[];
     };
   }
 
@@ -19,8 +19,8 @@ declare module "next-auth" {
     name: string;
     image: string | null;
     role: string;
-    divisionId: string | null;
-    assignments: { divisionId: string; permission: string }[];
+    departmentId: string | null;
+    assignments: { departmentId: string; permission: string }[];
   }
 }
 

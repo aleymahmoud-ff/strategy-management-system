@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type Division = {
+type Department = {
   id: string;
   name: string;
   headName: string;
@@ -11,10 +11,10 @@ type Division = {
   permission: string;
 };
 
-export function DivisionSelector({ divisions }: { divisions: Division[] }) {
+export function DepartmentSelector({ departments }: { departments: Department[] }) {
   return (
     <div className="grid grid-cols-3 gap-5">
-      {divisions.map((d, i) => (
+      {departments.map((d, i) => (
         <Link
           key={d.id}
           href={`/functional-plans/${d.id}`}

@@ -24,7 +24,7 @@ export function DeviationsPanel({ deviations }: { deviations: Deviation[] }) {
                   {dev.objective}
                 </div>
                 <div className="mt-0.5 text-[11px] text-text-sub">
-                  {dev.division}
+                  {dev.department}
                 </div>
               </div>
               <span

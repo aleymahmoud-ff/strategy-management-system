@@ -26,7 +26,7 @@ const objectiveSchema = z
     trackingPeriod: z.enum(["MONTHLY", "QUARTERLY", "HALF_ANNUAL", "ANNUAL"]).default("MONTHLY"),
     monthlyBaseline: z.array(z.number()),
     monthlyTarget: z.array(z.number()),
-    divisionId: z.string().min(1, "Division is required"),
+    departmentId: z.string().min(1, "Department is required"),
   })
   .refine(
     (data) => PERIOD_ORDER[data.trackingPeriod] <= PERIOD_ORDER[data.targetPeriod],
@@ -47,12 +47,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const divisionId = req.nextUrl.searchParams.get("divisionId");
+  const departmentId = req.nextUrl.searchParams.get("departmentId");
 
   const objectives = await prisma.objective.findMany({
-    where: divisionId ? { divisionId } : undefined,
-    orderBy: [{ divisionId: "asc" }, { sortOrder: "asc" }],
-    include: { division: { select: { name: true, slug: true } } },
+    where: departmentId ? { departmentId } : undefined,
+    orderBy: [{ departmentId: "asc" }, { sortOrder: "asc" }],
+    include: { department: { select: { name: true, slug: true } } },
   });
 
   const parsed = objectives.map((o) => ({
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   }
 
   const count = await prisma.objective.count({
-    where: { divisionId: parsed.data.divisionId },
+    where: { departmentId: parsed.data.departmentId },
   });
 
   const objective = await prisma.objective.create({
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       trackingPeriod: parsed.data.trackingPeriod,
       monthlyBaseline: JSON.stringify(parsed.data.monthlyBaseline),
       monthlyTarget: JSON.stringify(parsed.data.monthlyTarget),
-      divisionId: parsed.data.divisionId,
+      departmentId: parsed.data.departmentId,
       sortOrder: count + 1,
     },
   });

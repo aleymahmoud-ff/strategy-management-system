@@ -4,17 +4,17 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ divisionId: string }> }
+  { params }: { params: Promise<{ departmentId: string }> }
 ) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { divisionId } = await params;
+  const { departmentId } = await params;
 
   const isAdmin = session.user.role === "STRATEGY_MANAGER";
-  const assignment = session.user.assignments?.find((a) => a.divisionId === divisionId);
+  const assignment = session.user.assignments?.find((a) => a.departmentId === departmentId);
 
   if (!isAdmin && (!assignment || assignment.permission !== "EDIT")) {
     return NextResponse.json({ error: "Forbidden — no edit access" }, { status: 403 });
@@ -26,7 +26,7 @@ export async function POST(
   }
 
   const submission = await prisma.submission.findUnique({
-    where: { divisionId_periodId: { divisionId, periodId: period.id } },
+    where: { departmentId_periodId: { departmentId, periodId: period.id } },
   });
 
   if (!submission) {

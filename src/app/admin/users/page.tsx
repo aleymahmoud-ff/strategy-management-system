@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 
 type Assignment = {
-  divisionId: string;
+  departmentId: string;
   permission: string;
-  division: { name: string };
+  department: { name: string };
 };
 
 type User = {
@@ -13,12 +13,12 @@ type User = {
   email: string;
   name: string;
   role: string;
-  divisionId: string | null;
-  division: { name: string } | null;
+  departmentId: string | null;
+  department: { name: string } | null;
   assignments: Assignment[];
 };
 
-type Division = { id: string; name: string };
+type Department = { id: string; name: string };
 
 const ROLES = [
   { value: "FUNCTION_HEAD", label: "Function Head" },
@@ -33,7 +33,7 @@ const PERMISSION_LABELS: Record<string, string> = {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -42,7 +42,7 @@ export default function UsersPage() {
     email: "",
     password: "",
     role: "FUNCTION_HEAD",
-    divisionId: "",
+    departmentId: "",
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -50,7 +50,7 @@ export default function UsersPage() {
   // Assignment editor
   const [showAssignments, setShowAssignments] = useState(false);
   const [assignUser, setAssignUser] = useState<User | null>(null);
-  const [tempAssignments, setTempAssignments] = useState<{ divisionId: string; permission: string }[]>([]);
+  const [tempAssignments, setTempAssignments] = useState<{ departmentId: string; permission: string }[]>([]);
   const [savingAssign, setSavingAssign] = useState(false);
 
   // Delete modal
@@ -65,22 +65,22 @@ export default function UsersPage() {
     setLoading(false);
   }
 
-  async function loadDivisions() {
+  async function loadDepartments() {
     const res = await fetch("/api/functional-plans");
     const data = await res.json();
-    if (data.divisions) {
-      setDivisions(data.divisions.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })));
+    if (data.departments) {
+      setDepartments(data.departments.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })));
     }
   }
 
   useEffect(() => {
     loadUsers();
-    loadDivisions();
+    loadDepartments();
   }, []);
 
   function openCreate() {
     setEditingUser(null);
-    setForm({ name: "", email: "", password: "", role: "FUNCTION_HEAD", divisionId: "" });
+    setForm({ name: "", email: "", password: "", role: "FUNCTION_HEAD", departmentId: "" });
     setError("");
     setShowForm(true);
   }
@@ -92,7 +92,7 @@ export default function UsersPage() {
       email: user.email,
       password: "",
       role: user.role,
-      divisionId: user.divisionId || "",
+      departmentId: user.departmentId || "",
     });
     setError("");
     setShowForm(true);
@@ -108,8 +108,8 @@ export default function UsersPage() {
       if (form.email !== editingUser.email) body.email = form.email;
       if (form.password) body.password = form.password;
       if (form.role !== editingUser.role) body.role = form.role;
-      if (form.divisionId !== (editingUser.divisionId || ""))
-        body.divisionId = form.divisionId || "";
+      if (form.departmentId !== (editingUser.departmentId || ""))
+        body.departmentId = form.departmentId || "";
 
       const res = await fetch("/api/users", {
         method: "PUT",
@@ -133,7 +133,7 @@ export default function UsersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          divisionId: form.role === "FUNCTION_HEAD" ? form.divisionId || null : null,
+          departmentId: form.role === "FUNCTION_HEAD" ? form.departmentId || null : null,
         }),
       });
       if (!res.ok) {
@@ -154,24 +154,24 @@ export default function UsersPage() {
   function openAssignments(user: User) {
     setAssignUser(user);
     setTempAssignments(
-      user.assignments.map((a) => ({ divisionId: a.divisionId, permission: a.permission }))
+      user.assignments.map((a) => ({ departmentId: a.departmentId, permission: a.permission }))
     );
     setShowAssignments(true);
   }
 
   function addAssignment() {
-    const unassigned = divisions.filter(
-      (d) => !tempAssignments.some((a) => a.divisionId === d.id)
+    const unassigned = departments.filter(
+      (d) => !tempAssignments.some((a) => a.departmentId === d.id)
     );
     if (unassigned.length === 0) return;
-    setTempAssignments([...tempAssignments, { divisionId: unassigned[0].id, permission: "EDIT" }]);
+    setTempAssignments([...tempAssignments, { departmentId: unassigned[0].id, permission: "EDIT" }]);
   }
 
   function removeAssignment(idx: number) {
     setTempAssignments(tempAssignments.filter((_, i) => i !== idx));
   }
 
-  function updateAssignment(idx: number, field: "divisionId" | "permission", value: string) {
+  function updateAssignment(idx: number, field: "departmentId" | "permission", value: string) {
     const updated = [...tempAssignments];
     updated[idx] = { ...updated[idx], [field]: value };
     setTempAssignments(updated);
@@ -257,14 +257,14 @@ export default function UsersPage() {
                       <div className="flex flex-wrap gap-1.5">
                         {user.assignments.map((a) => (
                           <span
-                            key={a.divisionId}
+                            key={a.departmentId}
                             className={`inline-flex rounded-md px-2.5 py-0.5 text-[11px] font-semibold ${
                               a.permission === "EDIT"
                                 ? "bg-green-bg text-green"
                                 : "bg-bg-deep text-text-mut"
                             }`}
                           >
-                            {a.division.name} ({PERMISSION_LABELS[a.permission]})
+                            {a.department.name} ({PERMISSION_LABELS[a.permission]})
                           </span>
                         ))}
                       </div>
@@ -368,12 +368,12 @@ export default function UsersPage() {
               {tempAssignments.map((a, idx) => (
                 <div key={idx} className="flex items-center gap-3">
                   <select
-                    value={a.divisionId}
-                    onChange={(e) => updateAssignment(idx, "divisionId", e.target.value)}
+                    value={a.departmentId}
+                    onChange={(e) => updateAssignment(idx, "departmentId", e.target.value)}
                     className="flex-1 rounded-lg border border-border bg-bg-page px-3.5 py-2.5 text-[13px] text-text-hd placeholder:text-text-mut focus:border-brown/40 focus:outline-none focus:ring-2 focus:ring-brown/10"
                   >
-                    {divisions.map((d) => (
-                      <option key={d.id} value={d.id} disabled={tempAssignments.some((ta, i) => i !== idx && ta.divisionId === d.id)}>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id} disabled={tempAssignments.some((ta, i) => i !== idx && ta.departmentId === d.id)}>
                         {d.name}
                       </option>
                     ))}
@@ -399,7 +399,7 @@ export default function UsersPage() {
               ))}
             </div>
 
-            {tempAssignments.length < divisions.length && (
+            {tempAssignments.length < departments.length && (
               <button
                 onClick={addAssignment}
                 className="mt-3 text-[12px] font-semibold text-brown hover:underline"

@@ -3,21 +3,21 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saveDraftSchema } from "@/lib/validators";
 
-// GET: Load form data for a division
+// GET: Load form data for a department
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ divisionId: string }> }
+  { params }: { params: Promise<{ departmentId: string }> }
 ) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { divisionId } = await params;
+  const { departmentId } = await params;
 
   // Check access: admin sees all, function heads need an assignment
   const isAdmin = session.user.role === "STRATEGY_MANAGER";
-  const assignment = session.user.assignments?.find((a) => a.divisionId === divisionId);
+  const assignment = session.user.assignments?.find((a) => a.departmentId === departmentId);
   if (!isAdmin && !assignment) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -35,22 +35,22 @@ export async function GET(
     return NextResponse.json({ error: "No active period" }, { status: 404 });
   }
 
-  const division = await prisma.division.findUnique({
-    where: { id: divisionId },
+  const department = await prisma.department.findUnique({
+    where: { id: departmentId },
     include: {
       objectives: { orderBy: { sortOrder: "asc" } },
       keyActions: { orderBy: { sortOrder: "asc" } },
     },
   });
 
-  if (!division) {
-    return NextResponse.json({ error: "Division not found" }, { status: 404 });
+  if (!department) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
   }
 
   // Find or create submission
   let submission = await prisma.submission.findUnique({
     where: {
-      divisionId_periodId: { divisionId, periodId: period.id },
+      departmentId_periodId: { departmentId, periodId: period.id },
     },
     include: {
       objectiveEntries: true,
@@ -60,7 +60,7 @@ export async function GET(
 
   if (!submission) {
     submission = await prisma.submission.create({
-      data: { divisionId, periodId: period.id, status: "DRAFT" },
+      data: { departmentId, periodId: period.id, status: "DRAFT" },
       include: { objectiveEntries: true, actionEntries: true },
     });
   }
@@ -81,11 +81,11 @@ export async function GET(
       label: period.label,
       deadline: period.deadline.toISOString(),
     },
-    division: {
-      id: division.id,
-      name: division.name,
-      headName: division.headName,
-      initials: division.initials,
+    department: {
+      id: department.id,
+      name: department.name,
+      headName: department.headName,
+      initials: department.initials,
     },
     submission: {
       id: submission.id,
@@ -95,7 +95,7 @@ export async function GET(
     isLocked,
     isAdmin,
     permission: userPermission,
-    objectives: division.objectives.map((obj) => {
+    objectives: department.objectives.map((obj) => {
       const entry = submission!.objectiveEntries.find(
         (e) => e.objectiveId === obj.id
       );
@@ -115,7 +115,7 @@ export async function GET(
         note: entry?.note || "",
       };
     }),
-    actions: division.keyActions.map((action) => {
+    actions: department.keyActions.map((action) => {
       const entry = submission!.actionEntries.find(
         (e) => e.keyActionId === action.id
       );
@@ -138,17 +138,17 @@ export async function GET(
 // PUT: Save draft
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ divisionId: string }> }
+  { params }: { params: Promise<{ departmentId: string }> }
 ) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { divisionId } = await params;
+  const { departmentId } = await params;
 
   const isAdmin = session.user.role === "STRATEGY_MANAGER";
-  const assignment = session.user.assignments?.find((a) => a.divisionId === divisionId);
+  const assignment = session.user.assignments?.find((a) => a.departmentId === departmentId);
 
   // Must be admin or have EDIT assignment
   if (!isAdmin && (!assignment || assignment.permission !== "EDIT")) {
@@ -169,13 +169,13 @@ export async function PUT(
   }
 
   let submission = await prisma.submission.findUnique({
-    where: { divisionId_periodId: { divisionId, periodId: period.id } },
+    where: { departmentId_periodId: { departmentId, periodId: period.id } },
   });
 
   // Auto-create submission if admin is editing a period that doesn't have one yet
   if (!submission && isAdmin) {
     submission = await prisma.submission.create({
-      data: { divisionId, periodId: period.id, status: "DRAFT" },
+      data: { departmentId, periodId: period.id, status: "DRAFT" },
     });
   }
 

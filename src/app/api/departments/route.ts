@@ -9,24 +9,24 @@ const createSchema = z.object({
   initials: z.string().min(1).max(5, "Initials must be 1-5 characters"),
 });
 
-// GET: List all divisions
+// GET: List all departments
 export async function GET() {
   const session = await auth();
   if (!session || session.user.role !== "STRATEGY_MANAGER") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const divisions = await prisma.division.findMany({
+  const departments = await prisma.department.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       _count: { select: { objectives: true, keyActions: true, users: true, submissions: true } },
     },
   });
 
-  return NextResponse.json(divisions);
+  return NextResponse.json(departments);
 }
 
-// POST: Create a new division
+// POST: Create a new department
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session || session.user.role !== "STRATEGY_MANAGER") {
@@ -48,23 +48,23 @@ export async function POST(req: NextRequest) {
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
   // Check for duplicate slug
-  const existing = await prisma.division.findUnique({ where: { slug } });
+  const existing = await prisma.department.findUnique({ where: { slug } });
   if (existing) {
-    return NextResponse.json({ error: "A division with a similar name already exists" }, { status: 409 });
+    return NextResponse.json({ error: "A department with a similar name already exists" }, { status: 409 });
   }
 
   // Get next sort order
-  const maxOrder = await prisma.division.aggregate({ _max: { sortOrder: true } });
+  const maxOrder = await prisma.department.aggregate({ _max: { sortOrder: true } });
   const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
 
-  const division = await prisma.division.create({
+  const department = await prisma.department.create({
     data: { name, slug, headName, initials: initials.toUpperCase(), sortOrder },
   });
 
-  return NextResponse.json(division, { status: 201 });
+  return NextResponse.json(department, { status: 201 });
 }
 
-// PUT: Update a division
+// PUT: Update a department
 export async function PUT(req: NextRequest) {
   const session = await auth();
   if (!session || session.user.role !== "STRATEGY_MANAGER") {
@@ -83,12 +83,12 @@ export async function PUT(req: NextRequest) {
   if (headName) data.headName = headName;
   if (initials) data.initials = initials.toUpperCase();
 
-  const division = await prisma.division.update({ where: { id }, data });
+  const department = await prisma.department.update({ where: { id }, data });
 
-  return NextResponse.json(division);
+  return NextResponse.json(department);
 }
 
-// DELETE: Remove a division (only if no submissions exist)
+// DELETE: Remove a department (only if no submissions exist)
 export async function DELETE(req: NextRequest) {
   const session = await auth();
   if (!session || session.user.role !== "STRATEGY_MANAGER") {
@@ -101,21 +101,21 @@ export async function DELETE(req: NextRequest) {
   }
 
   // Check for submissions
-  const submissionCount = await prisma.submission.count({ where: { divisionId: id } });
+  const submissionCount = await prisma.submission.count({ where: { departmentId: id } });
   if (submissionCount > 0) {
     return NextResponse.json(
-      { error: "Cannot delete a division that has submissions. Remove all submissions first." },
+      { error: "Cannot delete a department that has submissions. Remove all submissions first." },
       { status: 400 }
     );
   }
 
   // Delete related objectives and key actions first
-  await prisma.objective.deleteMany({ where: { divisionId: id } });
-  await prisma.keyAction.deleteMany({ where: { divisionId: id } });
-  // Unassign users from this division
-  await prisma.user.updateMany({ where: { divisionId: id }, data: { divisionId: null } });
+  await prisma.objective.deleteMany({ where: { departmentId: id } });
+  await prisma.keyAction.deleteMany({ where: { departmentId: id } });
+  // Unassign users from this department
+  await prisma.user.updateMany({ where: { departmentId: id }, data: { departmentId: null } });
 
-  await prisma.division.delete({ where: { id } });
+  await prisma.department.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
 }

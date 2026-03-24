@@ -1,6 +1,6 @@
-type DivisionStatus = {
-  divisionId: string;
-  divisionName: string;
+type DepartmentStatus = {
+  departmentId: string;
+  departmentName: string;
   headName: string;
   initials: string;
   submitted: boolean;
@@ -8,9 +8,9 @@ type DivisionStatus = {
 };
 
 export function SubmissionStatus({
-  divisions,
+  departments,
 }: {
-  divisions: DivisionStatus[];
+  departments: DepartmentStatus[];
 }) {
   return (
     <div className="animate-fade-in-up delay-4 overflow-hidden rounded-xl border border-border bg-bg-card shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
@@ -20,9 +20,9 @@ export function SubmissionStatus({
         </div>
       </div>
       <div className="flex flex-col gap-1 p-3">
-        {divisions.map((d) => (
+        {departments.map((d) => (
           <div
-            key={d.divisionId}
+            key={d.departmentId}
             className="flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors duration-150 hover:bg-bg-mid/40"
           >
             <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export function SubmissionStatus({
               </div>
               <div>
                 <div className="text-[13px] font-medium text-text-bd">
-                  {d.divisionName}
+                  {d.departmentName}
                 </div>
                 <div className="text-[11px] text-text-sub">{d.headName}</div>
               </div>

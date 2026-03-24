@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const assignmentSchema = z.object({
   userId: z.string().min(1),
-  divisionId: z.string().min(1),
+  departmentId: z.string().min(1),
   permission: z.enum(["EDIT", "VIEW_ONLY"]),
 });
 
@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest) {
   const body = await req.json();
   const { userId, assignments } = body as {
     userId: string;
-    assignments: { divisionId: string; permission: string }[];
+    assignments: { departmentId: string; permission: string }[];
   };
 
   if (!userId) {
@@ -36,24 +36,24 @@ export async function PUT(req: NextRequest) {
 
   // Replace all assignments for this user
   await prisma.$transaction([
-    prisma.userDivision.deleteMany({ where: { userId } }),
-    ...((assignments || []).map((a: { divisionId: string; permission: string }) =>
-      prisma.userDivision.create({
-        data: { userId, divisionId: a.divisionId, permission: a.permission },
+    prisma.userDepartment.deleteMany({ where: { userId } }),
+    ...((assignments || []).map((a: { departmentId: string; permission: string }) =>
+      prisma.userDepartment.create({
+        data: { userId, departmentId: a.departmentId, permission: a.permission },
       })
     )),
   ]);
 
-  // Also update the legacy divisionId field (first EDIT assignment)
+  // Also update the legacy departmentId field (first EDIT assignment)
   const firstEdit = (assignments || []).find((a: { permission: string }) => a.permission === "EDIT");
   await prisma.user.update({
     where: { id: userId },
-    data: { divisionId: firstEdit ? firstEdit.divisionId : null },
+    data: { departmentId: firstEdit ? firstEdit.departmentId : null },
   });
 
-  const updated = await prisma.userDivision.findMany({
+  const updated = await prisma.userDepartment.findMany({
     where: { userId },
-    select: { divisionId: true, permission: true, division: { select: { name: true } } },
+    select: { departmentId: true, permission: true, department: { select: { name: true } } },
   });
 
   return NextResponse.json(updated);

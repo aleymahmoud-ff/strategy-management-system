@@ -10,7 +10,7 @@ export const userCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["FUNCTION_HEAD", "STRATEGY_MANAGER", "EXECUTIVE"]),
-  divisionId: z.string().nullable().optional(),
+  departmentId: z.string().nullable().optional(),
 });
 
 export const userUpdateSchema = z.object({
@@ -18,7 +18,7 @@ export const userUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   password: z.string().min(6).optional(),
   role: z.enum(["FUNCTION_HEAD", "STRATEGY_MANAGER", "EXECUTIVE"]).optional(),
-  divisionId: z.string().nullable().optional(),
+  departmentId: z.string().nullable().optional(),
 });
 
 export const saveDraftSchema = z.object({

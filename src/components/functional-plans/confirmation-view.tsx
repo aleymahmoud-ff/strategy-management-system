@@ -1,13 +1,13 @@
 import Link from "next/link";
 
 type Props = {
-  divisionName: string;
+  departmentName: string;
   periodLabel: string;
   submittedAt: string | null;
 };
 
 export function ConfirmationView({
-  divisionName,
+  departmentName,
   periodLabel,
   submittedAt,
 }: Props) {
@@ -45,7 +45,7 @@ export function ConfirmationView({
           Report Submitted
         </h2>
         <p className="mt-2 text-[13px] text-text-sub">
-          {divisionName} functional plan for {periodLabel} has been submitted
+          {departmentName} functional plan for {periodLabel} has been submitted
           successfully.
         </p>
         <p className="mt-1 text-[12px] text-text-mut">Submitted on {date}</p>

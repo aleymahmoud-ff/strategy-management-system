@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type Division = {
+type Department = {
   id: string;
   slug: string;
   name: string;
@@ -15,25 +15,25 @@ type Division = {
 
 export default function PlansOverviewPage() {
   const router = useRouter();
-  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", headName: "", initials: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<Division | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
   const [deleteError, setDeleteError] = useState("");
 
-  async function loadDivisions() {
-    const res = await fetch("/api/divisions");
+  async function loadDepartments() {
+    const res = await fetch("/api/departments");
     if (res.ok) {
-      setDivisions(await res.json());
+      setDepartments(await res.json());
     }
     setLoading(false);
   }
 
-  useEffect(() => { loadDivisions(); }, []);
+  useEffect(() => { loadDepartments(); }, []);
 
   function openCreate() {
     setForm({ name: "", headName: "", initials: "" });
@@ -42,7 +42,7 @@ export default function PlansOverviewPage() {
     setShowForm(true);
   }
 
-  function openEdit(div: Division) {
+  function openEdit(div: Department) {
     setForm({ name: div.name, headName: div.headName, initials: div.initials });
     setEditingId(div.id);
     setError("");
@@ -57,7 +57,7 @@ export default function PlansOverviewPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/divisions", {
+      const res = await fetch("/api/departments", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingId ? { id: editingId, ...form } : form),
@@ -70,7 +70,7 @@ export default function PlansOverviewPage() {
       }
       setSaving(false);
       setShowForm(false);
-      loadDivisions();
+      loadDepartments();
     } catch {
       setError("Network error");
       setSaving(false);
@@ -81,7 +81,7 @@ export default function PlansOverviewPage() {
     if (!deleteTarget) return;
     setSaving(true);
     setDeleteError("");
-    const res = await fetch(`/api/divisions?id=${deleteTarget.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/departments?id=${deleteTarget.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
       setDeleteError(data.error || "Cannot delete");
@@ -90,7 +90,7 @@ export default function PlansOverviewPage() {
     }
     setSaving(false);
     setDeleteTarget(null);
-    loadDivisions();
+    loadDepartments();
   }
 
   // Auto-generate initials from name
@@ -124,7 +124,7 @@ export default function PlansOverviewPage() {
 
       {loading ? (
         <div className="py-16 text-center text-text-sub">Loading...</div>
-      ) : divisions.length === 0 ? (
+      ) : departments.length === 0 ? (
         <div className="rounded-xl border border-border bg-bg-card p-16 text-center shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
           <p className="text-[15px] font-medium text-text-bd">No departments yet</p>
           <p className="mt-1 text-[13px] text-text-sub">
@@ -139,7 +139,7 @@ export default function PlansOverviewPage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-5">
-          {divisions.map((div) => (
+          {departments.map((div) => (
             <div
               key={div.id}
               className="card-glow group relative rounded-xl border border-border bg-bg-card p-6 shadow-[0_1px_6px_rgba(0,0,0,0.25)] transition-all"
@@ -197,7 +197,7 @@ export default function PlansOverviewPage() {
         </div>
       )}
 
-      {/* Add / Edit Division Modal */}
+      {/* Add / Edit Department Modal */}
       {showForm && (
         <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center">
           <div className="animate-scale-in w-full max-w-md rounded-xl border border-border bg-bg-card p-8 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">

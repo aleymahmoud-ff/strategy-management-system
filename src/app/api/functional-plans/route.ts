@@ -13,7 +13,7 @@ export async function GET() {
     return NextResponse.json({ error: "No active period" }, { status: 404 });
   }
 
-  const divisions = await prisma.division.findMany({
+  const departments = await prisma.department.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       objectives: true,
@@ -24,7 +24,7 @@ export async function GET() {
     },
   });
 
-  const data = divisions.map((d) => ({
+  const data = departments.map((d) => ({
     id: d.id,
     slug: d.slug,
     name: d.name,
@@ -35,5 +35,5 @@ export async function GET() {
     submittedAt: d.submissions[0]?.submittedAt?.toISOString() || null,
   }));
 
-  return NextResponse.json({ period, divisions: data });
+  return NextResponse.json({ period, departments: data });
 }

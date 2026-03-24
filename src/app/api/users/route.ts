@@ -18,13 +18,13 @@ export async function GET() {
       email: true,
       name: true,
       role: true,
-      divisionId: true,
-      division: { select: { name: true } },
+      departmentId: true,
+      department: { select: { name: true } },
       assignments: {
         select: {
-          divisionId: true,
+          departmentId: true,
           permission: true,
-          division: { select: { name: true } },
+          department: { select: { name: true } },
         },
       },
       createdAt: true,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, name, password, role, divisionId } = parsed.data;
+  const { email, name, password, role, departmentId } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       name,
       passwordHash,
       role,
-      divisionId: role === "FUNCTION_HEAD" ? divisionId || null : null,
+      departmentId: role === "FUNCTION_HEAD" ? departmentId || null : null,
     },
     select: { id: true, email: true, name: true, role: true },
   });
@@ -105,9 +105,9 @@ export async function PUT(req: NextRequest) {
   if (parsed.data.password) {
     data.passwordHash = await bcrypt.hash(parsed.data.password, 12);
   }
-  if (parsed.data.divisionId !== undefined) {
-    data.divisionId =
-      parsed.data.role === "FUNCTION_HEAD" ? parsed.data.divisionId : null;
+  if (parsed.data.departmentId !== undefined) {
+    data.departmentId =
+      parsed.data.role === "FUNCTION_HEAD" ? parsed.data.departmentId : null;
   }
 
   const user = await prisma.user.update({

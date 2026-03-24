@@ -1,10 +1,10 @@
 type Props = {
-  division: { name: string; headName: string; initials: string };
+  department: { name: string; headName: string; initials: string };
   period: { label: string; deadline: string };
   saving: boolean;
 };
 
-export function SubmissionBanner({ division, period, saving }: Props) {
+export function SubmissionBanner({ department, period, saving }: Props) {
   const deadline = new Date(period.deadline);
   const now = new Date();
   const daysLeft = Math.max(
@@ -20,12 +20,12 @@ export function SubmissionBanner({ division, period, saving }: Props) {
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brown/10 text-[13px] font-bold text-brown">
-            {division.initials}
+            {department.initials}
           </div>
           <div>
-            <h2 className="font-heading text-xl font-bold text-text-hd">{division.name}</h2>
+            <h2 className="font-heading text-xl font-bold text-text-hd">{department.name}</h2>
             <p className="text-[13px] text-text-sub">
-              {division.headName} &middot; {period.label}
+              {department.headName} &middot; {period.label}
             </p>
           </div>
         </div>

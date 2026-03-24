@@ -23,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             : { username: login },
           include: {
             assignments: {
-              select: { divisionId: true, permission: true },
+              select: { departmentId: true, permission: true },
             },
           },
         });
@@ -43,9 +43,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           image: user.image,
           role: user.role,
-          divisionId: user.divisionId,
+          departmentId: user.departmentId,
           assignments: user.assignments.map((a) => ({
-            divisionId: a.divisionId,
+            departmentId: a.departmentId,
             permission: a.permission,
           })),
         };
@@ -62,8 +62,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id as string;
         token.role = user.role as string;
         token.image = (user.image as string | null) ?? null;
-        token.divisionId = user.divisionId as string | null;
-        token.assignments = user.assignments as { divisionId: string; permission: string }[];
+        token.departmentId = user.departmentId as string | null;
+        token.assignments = user.assignments as { departmentId: string; permission: string }[];
       }
       return token;
     },
@@ -71,8 +71,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.id as string;
       session.user.role = token.role as "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
       session.user.image = (token.image as string | null) ?? null;
-      session.user.divisionId = (token.divisionId as string | null) ?? null;
-      session.user.assignments = (token.assignments as { divisionId: string; permission: "EDIT" | "VIEW_ONLY" }[]) || [];
+      session.user.departmentId = (token.departmentId as string | null) ?? null;
+      session.user.assignments = (token.assignments as { departmentId: string; permission: "EDIT" | "VIEW_ONLY" }[]) || [];
       return session;
     },
   },

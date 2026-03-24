@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "No active period found" }, { status: 404 });
   }
 
-  // Get all divisions
-  const divisions = await prisma.division.findMany({
+  // Get all departments
+  const departments = await prisma.department.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       objectives: { orderBy: { sortOrder: "asc" } },
@@ -41,11 +41,11 @@ export async function GET(req: NextRequest) {
   });
 
   // Compute KPIs
-  const totalDivisions = divisions.length;
-  const submittedDivisions = divisions.filter(
+  const totalDepartments = departments.length;
+  const submittedDepartments = departments.filter(
     (d) => d.submissions[0]?.status === "SUBMITTED"
   );
-  const submissionsCount = submittedDivisions.length;
+  const submissionsCount = submittedDepartments.length;
 
   let totalObjectives = 0;
   let onTrackCount = 0;
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
   const objectivesData: Array<{
     id: string;
-    division: string;
+    department: string;
     statement: string;
     progress: number;
     status: string;
@@ -64,10 +64,10 @@ export async function GET(req: NextRequest) {
 
   const allEntries: Array<{
     achievedValue: string;
-    objective: { statement: string; target: string; division: { name: string } };
+    objective: { statement: string; target: string; department: { name: string } };
   }> = [];
 
-  for (const div of divisions) {
+  for (const div of departments) {
     const submission = div.submissions[0];
     const completedDivActions = submission
       ? submission.actionEntries.filter((a) => a.status === "COMPLETE").length
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
 
       objectivesData.push({
         id: obj.id,
-        division: div.name,
+        department: div.name,
         statement: obj.statement,
         progress,
         status,
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
           objective: {
             statement: obj.statement,
             target,
-            division: { name: div.name },
+            department: { name: div.name },
           },
         });
       }
@@ -119,9 +119,9 @@ export async function GET(req: NextRequest) {
   const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
   const deviations = computeDeviations(allEntries);
 
-  const submissionStatus = divisions.map((d) => ({
-    divisionId: d.id,
-    divisionName: d.name,
+  const submissionStatus = departments.map((d) => ({
+    departmentId: d.id,
+    departmentName: d.name,
     headName: d.headName,
     initials: d.initials,
     submitted: d.submissions[0]?.status === "SUBMITTED",
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
     },
     kpis: {
       submissionsCount,
-      totalDivisions,
+      totalDepartments,
       onTrackCount,
       totalObjectives,
       deviationsCount: deviations.length,

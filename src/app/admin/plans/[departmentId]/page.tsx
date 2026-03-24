@@ -87,14 +87,14 @@ type KeyAction = {
   frequency: string;
 };
 
-type Division = { id: string; name: string; headName: string; initials: string };
+type Department = { id: string; name: string; headName: string; initials: string };
 
-export default function DivisionPlanPage() {
-  const { divisionId } = useParams<{ divisionId: string }>();
+export default function DepartmentPlanPage() {
+  const { departmentId } = useParams<{ departmentId: string }>();
   const router = useRouter();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [actions, setActions] = useState<KeyAction[]>([]);
-  const [division, setDivision] = useState<Division | null>(null);
+  const [department, setDepartment] = useState<Department | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Objective form
@@ -129,19 +129,19 @@ export default function DivisionPlanPage() {
 
   async function loadData() {
     const [objRes, actRes, divRes] = await Promise.all([
-      fetch(`/api/objectives?divisionId=${divisionId}`),
-      fetch(`/api/actions?divisionId=${divisionId}`),
+      fetch(`/api/objectives?departmentId=${departmentId}`),
+      fetch(`/api/actions?departmentId=${departmentId}`),
       fetch(`/api/functional-plans`),
     ]);
     setObjectives(await objRes.json());
     setActions(await actRes.json());
     const divData = await divRes.json();
-    const div = divData.divisions?.find((d: { id: string }) => d.id === divisionId);
-    if (div) setDivision(div);
+    const dep = divData.departments?.find((d: { id: string }) => d.id === departmentId);
+    if (dep) setDepartment(dep);
     setLoading(false);
   }
 
-  useEffect(() => { loadData(); }, [divisionId]);
+  useEffect(() => { loadData(); }, [departmentId]);
 
   // ─── Target Period change handler ─────────────────────
   function handleTargetPeriodChange(newTargetPeriod: string) {
@@ -205,7 +205,7 @@ export default function DivisionPlanPage() {
     try {
       const payload = editingObj
         ? { id: editingObj.id, ...objForm }
-        : { ...objForm, divisionId };
+        : { ...objForm, departmentId };
       const res = await fetch("/api/objectives", {
         method: editingObj ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -263,7 +263,7 @@ export default function DivisionPlanPage() {
     try {
       const payload = editingAct
         ? { id: editingAct.id, ...actForm }
-        : { ...actForm, divisionId };
+        : { ...actForm, departmentId };
       const res = await fetch("/api/actions", {
         method: editingAct ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -339,10 +339,10 @@ export default function DivisionPlanPage() {
           </button>
           <div>
             <h1 className="animate-fade-in-up font-heading text-[26px] font-bold text-text-hd">
-              {division?.name || "Department"} Plan
+              {department?.name || "Department"} Plan
             </h1>
             <p className="mt-0.5 text-[13px] text-text-sub">
-              {division?.headName} &middot; Objectives with targets & key actions
+              {department?.headName} &middot; Objectives with targets & key actions
             </p>
           </div>
         </div>

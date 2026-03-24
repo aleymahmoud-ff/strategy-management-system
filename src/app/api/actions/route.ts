@@ -8,7 +8,7 @@ const actionSchema = z.object({
   dueDate: z.string().min(1, "Due date is required"),
   owner: z.string().min(1, "Owner is required"),
   frequency: z.enum(["MONTHLY", "QUARTERLY"]).default("MONTHLY"),
-  divisionId: z.string().min(1, "Division is required"),
+  departmentId: z.string().min(1, "Department is required"),
 });
 
 export async function GET(req: NextRequest) {
@@ -17,12 +17,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const divisionId = req.nextUrl.searchParams.get("divisionId");
+  const departmentId = req.nextUrl.searchParams.get("departmentId");
 
   const actions = await prisma.keyAction.findMany({
-    where: divisionId ? { divisionId } : undefined,
-    orderBy: [{ divisionId: "asc" }, { sortOrder: "asc" }],
-    include: { division: { select: { name: true } } },
+    where: departmentId ? { departmentId } : undefined,
+    orderBy: [{ departmentId: "asc" }, { sortOrder: "asc" }],
+    include: { department: { select: { name: true } } },
   });
 
   return NextResponse.json(actions);
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const count = await prisma.keyAction.count({
-    where: { divisionId: parsed.data.divisionId },
+    where: { departmentId: parsed.data.departmentId },
   });
 
   const action = await prisma.keyAction.create({
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       dueDate: new Date(parsed.data.dueDate),
       owner: parsed.data.owner,
       frequency: parsed.data.frequency,
-      divisionId: parsed.data.divisionId,
+      departmentId: parsed.data.departmentId,
       sortOrder: count + 1,
     },
   });

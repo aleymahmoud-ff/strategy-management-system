@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const divisions = await prisma.division.findMany({
+  const departments = await prisma.department.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       objectives: { orderBy: { sortOrder: "asc" } },
@@ -37,8 +37,8 @@ export default async function DashboardPage() {
   });
 
   // Compute all data
-  const totalDivisions = divisions.length;
-  const submissionsCount = divisions.filter(
+  const totalDepartments = departments.length;
+  const submissionsCount = departments.filter(
     (d) => d.submissions[0]?.status === "SUBMITTED"
   ).length;
 
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
 
   const objectivesData: Array<{
     id: string;
-    division: string;
+    department: string;
     statement: string;
     progress: number;
     status: string;
@@ -59,12 +59,12 @@ export default async function DashboardPage() {
 
   const allEntries: Array<{
     achievedValue: string;
-    objective: { statement: string; target: string; division: { name: string } };
+    objective: { statement: string; target: string; department: { name: string } };
   }> = [];
 
   const currentMonthIdx = period.month - 1;
 
-  for (const div of divisions) {
+  for (const div of departments) {
     const submission = div.submissions[0];
     const completedDivActions = submission
       ? submission.actionEntries.filter((a) => a.status === "COMPLETE").length
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
 
       objectivesData.push({
         id: obj.id,
-        division: div.name,
+        department: div.name,
         statement: obj.statement,
         progress,
         status,
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
           objective: {
             statement: obj.statement,
             target,
-            division: { name: div.name },
+            department: { name: div.name },
           },
         });
       }
@@ -113,9 +113,9 @@ export default async function DashboardPage() {
   const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
   const deviations = computeDeviations(allEntries);
 
-  const submissionStatus = divisions.map((d) => ({
-    divisionId: d.id,
-    divisionName: d.name,
+  const submissionStatus = departments.map((d) => ({
+    departmentId: d.id,
+    departmentName: d.name,
     headName: d.headName,
     initials: d.initials,
     submitted: d.submissions[0]?.status === "SUBMITTED",
@@ -130,14 +130,14 @@ export default async function DashboardPage() {
           Strategy Dashboard
         </h1>
         <p className="mt-1 text-[13px] text-text-sub">
-          {period.label} &middot; Consolidated view across all divisions
+          {period.label} &middot; Consolidated view across all departments
         </p>
       </div>
 
       {/* KPI Cards */}
       <KpiCards
         submissionsCount={submissionsCount}
-        totalDivisions={totalDivisions}
+        totalDepartments={totalDepartments}
         onTrackCount={onTrackCount}
         totalObjectives={totalObjectives}
         deviationsCount={deviations.length}
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
 
         {/* Right: Sidebar */}
         <div className="flex flex-col gap-5">
-          <SubmissionStatus divisions={submissionStatus} />
+          <SubmissionStatus departments={submissionStatus} />
         </div>
       </div>
 

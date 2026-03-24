@@ -1,6 +1,6 @@
 type Objective = {
   id: string;
-  division: string;
+  department: string;
   statement: string;
   progress: number;
   status: string;
@@ -28,7 +28,7 @@ export function ObjectivesTable({ objectives }: { objectives: Objective[] }) {
     <div className="animate-fade-in-up delay-3 overflow-hidden rounded-xl border border-border bg-bg-card shadow-[0_1px_6px_rgba(0,0,0,0.25)]">
       <div className="border-b border-border px-6 py-4">
         <div className="text-[11px] font-semibold uppercase tracking-[1.5px] text-text-sub">
-          Divisional Objectives
+          Department Objectives
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -36,7 +36,7 @@ export function ObjectivesTable({ objectives }: { objectives: Objective[] }) {
           <thead>
             <tr>
               <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">
-                Division
+                Department
               </th>
               <th className="border-b border-border bg-bg-mid/50 px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[1px] text-text-mut">
                 Objective
@@ -58,7 +58,7 @@ export function ObjectivesTable({ objectives }: { objectives: Objective[] }) {
               return (
                 <tr key={obj.id} className="transition-colors duration-150 hover:bg-bg-mid/30">
                   <td className="border-b border-border/50 px-4 py-3 font-medium text-text-bd">
-                    {obj.division}
+                    {obj.department}
                   </td>
                   <td className="border-b border-border/50 px-4 py-3 text-text-bd">
                     {obj.statement}

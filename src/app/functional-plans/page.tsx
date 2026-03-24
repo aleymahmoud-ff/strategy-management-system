@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { DivisionSelector } from "@/components/functional-plans/division-selector";
+import { DepartmentSelector } from "@/components/functional-plans/department-selector";
 
 export default async function FunctionalPlansPage() {
   const session = await auth();
   if (!session) redirect("/login");
   if (session.user.role === "EXECUTIVE") redirect("/dashboard");
 
-  // Function heads with exactly one EDIT assignment go directly to that division
+  // Function heads with exactly one EDIT assignment go directly to that department
   if (session.user.role === "FUNCTION_HEAD") {
     const editAssignments = session.user.assignments.filter((a) => a.permission === "EDIT");
     if (editAssignments.length === 1 && session.user.assignments.length === 1) {
-      redirect(`/functional-plans/${editAssignments[0].divisionId}`);
+      redirect(`/functional-plans/${editAssignments[0].departmentId}`);
     }
   }
 
@@ -25,14 +25,14 @@ export default async function FunctionalPlansPage() {
     );
   }
 
-  // For FUNCTION_HEAD: only show assigned divisions
-  // For STRATEGY_MANAGER: show all divisions
-  const assignedDivisionIds = session.user.assignments.map((a) => a.divisionId);
+  // For FUNCTION_HEAD: only show assigned departments
+  // For STRATEGY_MANAGER: show all departments
+  const assignedDepartmentIds = session.user.assignments.map((a) => a.departmentId);
   const whereClause = session.user.role === "FUNCTION_HEAD"
-    ? { id: { in: assignedDivisionIds } }
+    ? { id: { in: assignedDepartmentIds } }
     : {};
 
-  const divisions = await prisma.division.findMany({
+  const departments = await prisma.department.findMany({
     where: whereClause,
     orderBy: { sortOrder: "asc" },
     include: {
@@ -47,10 +47,10 @@ export default async function FunctionalPlansPage() {
   // Build assignment permission map for the current user
   const permissionMap: Record<string, string> = {};
   for (const a of session.user.assignments) {
-    permissionMap[a.divisionId] = a.permission;
+    permissionMap[a.departmentId] = a.permission;
   }
 
-  const data = divisions.map((d) => ({
+  const data = departments.map((d) => ({
     id: d.id,
     name: d.name,
     headName: d.headName,
@@ -71,7 +71,7 @@ export default async function FunctionalPlansPage() {
           {period.label} &middot; Select a department to view or submit their plan
         </p>
       </div>
-      <DivisionSelector divisions={data} />
+      <DepartmentSelector departments={data} />
     </main>
   );
 }
