@@ -25,7 +25,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error === "CredentialsSignin" ? "Invalid email or password" : `Auth error: ${result.error} (${result.status})`);
+      setError("Invalid email or password");
       return;
     }
 

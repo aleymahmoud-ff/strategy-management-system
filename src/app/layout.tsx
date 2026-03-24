@@ -17,7 +17,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Strategy Management System",
+  title: "SEM — Strategy Execution Management",
   description: "Strategic objectives management and reporting platform",
 };
 
