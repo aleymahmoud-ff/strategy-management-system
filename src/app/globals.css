@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0B0E18;
+  --color-foreground: #B8B0A0;
+
+  /* Brass / Gold (Primary) */
+  --color-brown: #C9A24D;
+  --color-brown-md: #D4B06A;
+  --color-brown-lt: #E0C48A;
+  --color-brown-dk: #A88535;
+
+  /* Gold Accent */
+  --color-peach: #E8CC7A;
+  --color-peach-dk: #D4B45A;
+
+  /* Teal */
+  --color-teal: #4CC9C0;
+  --color-teal-dk: #35ADA5;
+
+  /* Sand */
+  --color-sand: #7A6B4E;
+  --color-sand-dk: #5E5239;
+
+  /* Blush */
+  --color-blush: #D4738A;
+  --color-blush-dk: #B85870;
+
+  /* Backgrounds — Deep indigo spectrum */
+  --color-bg-page: #0B0E18;
+  --color-bg-card: #12162A;
+  --color-bg-mid: #1A1F38;
+  --color-bg-deep: #232845;
+
+  /* Text — Warm cream on dark */
+  --color-text-hd: #EDE8DC;
+  --color-text-bd: #B8B0A0;
+  --color-text-sub: #7A7468;
+  --color-text-mut: #524C42;
+
+  /* Borders — Indigo spectrum */
+  --color-border: #1E2340;
+  --color-border-md: #2E3458;
+
+  /* Status — Vivid on dark */
+  --color-green: #4ADE80;
+  --color-green-bg: rgba(74, 222, 128, 0.10);
+  --color-amber: #FBBF24;
+  --color-amber-bg: rgba(251, 191, 36, 0.10);
+  --color-red: #F87171;
+  --color-red-bg: rgba(248, 113, 113, 0.10);
+  --color-info: #60A5FA;
+  --color-info-bg: rgba(96, 165, 250, 0.10);
+
+  /* Fonts */
+  --font-heading: var(--font-fraunces), "Fraunces", serif;
+  --font-body: var(--font-outfit), "Outfit", sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 1px 6px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(201, 162, 77, 0.03);
+  --shadow-glow: 0 0 20px rgba(201, 162, 77, 0.08);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(201, 162, 77, 0.05);
+
+  /* Animation timing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Base ──────────────────────────────────────────── */
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-bd);
+  font-family: var(--font-body);
+}
+
+/* Subtle noise grain overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-md);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brown);
+}
+
+/* ─── Selection ─────────────────────────────────────── */
+
+::selection {
+  background: rgba(201, 162, 77, 0.25);
+  color: var(--color-text-hd);
+}
+
+/* ─── Focus Ring ────────────────────────────────────── */
+
+*:focus-visible {
+  outline: 2px solid rgba(201, 162, 77, 0.4);
+  outline-offset: 2px;
+}
+
+/* ─── Animations ────────────────────────────────────── */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 77, 0); }
+  50% { box-shadow: 0 0 16px 2px rgba(201, 162, 77, 0.15); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s var(--ease-out-expo) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s var(--ease-out-expo) both;
+}
+
+/* Stagger delay utilities */
+.delay-1 { animation-delay: 50ms; }
+.delay-2 { animation-delay: 100ms; }
+.delay-3 { animation-delay: 150ms; }
+.delay-4 { animation-delay: 200ms; }
+.delay-5 { animation-delay: 250ms; }
+.delay-6 { animation-delay: 300ms; }
+
+/* ─── Card hover glow ──────────────────────────────── */
+
+.card-glow {
+  position: relative;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.card-glow:hover {
+  border-color: rgba(201, 162, 77, 0.2);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ─── Skeleton shimmer for dark theme ──────────────── */
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-mid) 25%,
+    var(--color-bg-deep) 50%,
+    var(--color-bg-mid) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ─── Modal backdrop blur ──────────────────────────── */
+
+.modal-overlay {
+  background: rgba(5, 7, 15, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ─── Subtle gradient mesh for hero sections ───────── */
+
+.gradient-mesh {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(201, 162, 77, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(76, 201, 192, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(96, 165, 250, 0.03) 0%, transparent 50%);
+}
+
+/* ─── Divider with glow ────────────────────────────── */
+
+.divider-glow {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 162, 77, 0.2) 50%,
+    transparent 100%
+  );
+}
+
+/* ─── Input dark overrides ─────────────────────────── */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(0.3) hue-rotate(15deg);
+}
+
+select {
+  color-scheme: dark;
+}

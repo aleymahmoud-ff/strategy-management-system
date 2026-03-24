@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  name         String
+  image        String?          // Profile photo URL
+  passwordHash String
+  role         String           // FUNCTION_HEAD | STRATEGY_MANAGER | EXECUTIVE
+  divisionId   String?          // Legacy — kept for backward compat
+  division     Division?        @relation(fields: [divisionId], references: [id])
+  assignments  UserDivision[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model UserDivision {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  divisionId String
+  division   Division @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  permission String   @default("EDIT") // EDIT | VIEW_ONLY
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, divisionId])
+}
+
+model Division {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  headName    String
+  initials    String
+  sortOrder   Int              @default(0)
+  users       User[]
+  assignments UserDivision[]
+  objectives  Objective[]
+  keyActions  KeyAction[]
+  submissions Submission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Objective {
+  id              String           @id @default(cuid())
+  code            String
+  statement       String
+  unit            String
+  targetDirection String           @default(">=") // >, <, <=, >=, =
+  targetPeriod    String           @default("MONTHLY") // MONTHLY | QUARTERLY | HALF_ANNUAL | ANNUAL
+  trackingPeriod  String           @default("MONTHLY") // MONTHLY | QUARTERLY | HALF_ANNUAL | ANNUAL
+  monthlyBaseline String           @default("[]") // JSON: array of 12 numbers
+  monthlyTarget   String           @default("[]") // JSON: array of 12 numbers
+  sortOrder       Int              @default(0)
+  divisionId      String
+  division        Division         @relation(fields: [divisionId], references: [id])
+  entries         ObjectiveEntry[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([divisionId, code])
+}
+
+model KeyAction {
+  id          String           @id @default(cuid())
+  code        String
+  description String
+  dueDate     DateTime
+  owner       String
+  frequency   String           @default("MONTHLY") // MONTHLY | QUARTERLY
+  sortOrder   Int              @default(0)
+  divisionId  String
+  division    Division         @relation(fields: [divisionId], references: [id])
+  entries     KeyActionEntry[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Period {
+  id          String       @id @default(cuid())
+  label       String
+  year        Int
+  month       Int
+  deadline    DateTime
+  isActive    Boolean      @default(false)
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+
+  @@unique([year, month])
+}
+
+model Submission {
+  id               String           @id @default(cuid())
+  status           String           @default("DRAFT")
+  submittedAt      DateTime?
+  divisionId       String
+  division         Division         @relation(fields: [divisionId], references: [id])
+  periodId         String
+  period           Period           @relation(fields: [periodId], references: [id])
+  objectiveEntries ObjectiveEntry[]
+  actionEntries    KeyActionEntry[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@unique([divisionId, periodId])
+}
+
+model ObjectiveEntry {
+  id            String     @id @default(cuid())
+  achievedValue String     @default("")
+  note          String     @default("")
+  submissionId  String
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  objectiveId   String
+  objective     Objective  @relation(fields: [objectiveId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([submissionId, objectiveId])
+}
+
+model KeyActionEntry {
+  id           String     @id @default(cuid())
+  status       String     @default("NOT_STARTED")
+  progress     String     @default("")
+  nextPriority String     @default("")
+  blockers     String     @default("")
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  keyActionId  String
+  keyAction    KeyAction  @relation(fields: [keyActionId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([submissionId, keyActionId])
+}
