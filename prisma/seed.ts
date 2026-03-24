@@ -20,16 +20,16 @@ function flat(val: number): string {
 async function main() {
   console.log("Seeding database...");
 
-  // Clear
-  await prisma.keyActionEntry.deleteMany();
-  await prisma.objectiveEntry.deleteMany();
-  await prisma.submission.deleteMany();
-  await prisma.keyAction.deleteMany();
-  await prisma.objective.deleteMany();
-  await prisma.userDivision.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.division.deleteMany();
-  await prisma.period.deleteMany();
+  // Clear existing data (ignore errors on fresh DB)
+  await prisma.keyActionEntry.deleteMany().catch(() => {});
+  await prisma.objectiveEntry.deleteMany().catch(() => {});
+  await prisma.submission.deleteMany().catch(() => {});
+  await prisma.keyAction.deleteMany().catch(() => {});
+  await prisma.objective.deleteMany().catch(() => {});
+  await prisma.userDivision.deleteMany().catch(() => {});
+  await prisma.user.deleteMany().catch(() => {});
+  await prisma.division.deleteMany().catch(() => {});
+  await prisma.period.deleteMany().catch(() => {});
 
   // Period
   const period = await prisma.period.create({
