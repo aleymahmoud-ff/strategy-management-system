@@ -12,43 +12,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        try {
+          if (!credentials?.email || !credentials?.password) return null;
 
-        const login = (credentials.email as string).trim();
-        const isEmail = login.includes("@");
+          const login = (credentials.email as string).trim();
+          const isEmail = login.includes("@");
 
-        const user = await prisma.user.findFirst({
-          where: isEmail
-            ? { email: login }
-            : { username: login },
-          include: {
-            assignments: {
-              select: { departmentId: true, permission: true },
+          const user = await prisma.user.findFirst({
+            where: isEmail
+              ? { email: login }
+              : { username: login },
+            include: {
+              assignments: {
+                select: { departmentId: true, permission: true },
+              },
             },
-          },
-        });
+          });
 
-        if (!user) return null;
+          if (!user) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        );
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash
+          );
 
-        if (!isValid) return null;
+          if (!isValid) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-          departmentId: user.departmentId,
-          assignments: user.assignments.map((a) => ({
-            departmentId: a.departmentId,
-            permission: a.permission,
-          })),
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+            departmentId: user.departmentId,
+            assignments: user.assignments.map((a) => ({
+              departmentId: a.departmentId,
+              permission: a.permission,
+            })),
+          };
+        } catch (err) {
+          console.error("[auth] authorize error:", err);
+          return null;
+        }
       },
     }),
   ],
