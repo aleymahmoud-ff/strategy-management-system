@@ -17,29 +17,30 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email: login,
-        password,
-        redirect: false,
+      // Manual fetch to check response headers
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Auth-Return-Redirect": "1",
+        },
+        body: new URLSearchParams({
+          email: login,
+          password,
+          csrfToken,
+          callbackUrl: "/",
+        }),
       });
 
-      // Debug: show the actual signIn result
-      if (!result) {
-        setLoading(false);
-        setError(`DEBUG: signIn returned ${String(result)}`);
-        return;
-      }
+      const data = await res.json();
+      const setCookie = res.headers.get("set-cookie") || "(null)";
+      const allHeaders = Array.from(res.headers.entries()).map(([k,v]) => `${k}: ${v.substring(0, 80)}`).join(" | ");
 
-      if (result.error) {
-        setLoading(false);
-        setError(`DEBUG: error=${result.error}, code=${result.code}, status=${result.status}, ok=${result.ok}, url=${result.url}`);
-        return;
-      }
-
-      // Show cookies before redirect for debugging
-      setError(`DEBUG: ok=${result.ok}, status=${result.status}, url=${result.url}, cookies=${document.cookie.substring(0, 200)}`);
-      // Delay redirect so we can see the debug info
-      setTimeout(() => { window.location.href = "/"; }, 5000);
+      setLoading(false);
+      setError(`DEBUG: status=${res.status}, ok=${res.ok}, url=${data.url}, set-cookie=${setCookie}, headers=[${allHeaders}], doc.cookie=${document.cookie.substring(0, 200)}`);
     } catch (err) {
       setLoading(false);
       setError(`DEBUG catch: ${err instanceof Error ? err.message : String(err)}`);
