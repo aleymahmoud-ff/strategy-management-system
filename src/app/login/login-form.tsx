@@ -23,17 +23,26 @@ export default function LoginForm() {
         redirect: false,
       });
 
-      if (result?.error) {
+      // Debug: show the actual signIn result
+      if (!result) {
         setLoading(false);
-        setError("Invalid email/username or password");
+        setError(`DEBUG: signIn returned ${String(result)}`);
         return;
       }
 
-      // Full page navigation to ensure the auth cookie is sent with the request
-      window.location.href = "/";
-    } catch {
+      if (result.error) {
+        setLoading(false);
+        setError(`DEBUG: error=${result.error}, code=${result.code}, status=${result.status}, ok=${result.ok}, url=${result.url}`);
+        return;
+      }
+
+      // Show cookies before redirect for debugging
+      setError(`DEBUG: ok=${result.ok}, status=${result.status}, url=${result.url}, cookies=${document.cookie.substring(0, 200)}`);
+      // Delay redirect so we can see the debug info
+      setTimeout(() => { window.location.href = "/"; }, 5000);
+    } catch (err) {
       setLoading(false);
-      setError("Something went wrong. Please try again.");
+      setError(`DEBUG catch: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
