@@ -1,8 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+// Clear any stale NextAuth cookies so users don't get stuck
+function clearAuthCookies() {
+  const authCookies = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .filter((c) => c.startsWith("next-auth") || c.startsWith("__Secure-next-auth") || c.startsWith("authjs"));
+  for (const cookie of authCookies) {
+    const name = cookie.split("=")[0];
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure`;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +25,11 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Auto-clear stale auth cookies on login page load
+  useEffect(() => {
+    clearAuthCookies();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
