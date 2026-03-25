@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,21 +16,25 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email: login,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: login,
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
+      if (result?.error) {
+        setLoading(false);
+        setError("Invalid email/username or password");
+        return;
+      }
 
-    if (result?.error) {
-      setError("Invalid email/username or password");
-      return;
+      // Full page navigation to ensure the auth cookie is sent with the request
+      window.location.href = "/";
+    } catch {
+      setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
-
-    router.push("/");
-    router.refresh();
   }
 
   return (
