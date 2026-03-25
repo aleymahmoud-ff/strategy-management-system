@@ -9,7 +9,12 @@ function clearAuthCookies() {
   const authCookies = document.cookie
     .split(";")
     .map((c) => c.trim())
-    .filter((c) => c.startsWith("next-auth") || c.startsWith("__Secure-next-auth") || c.startsWith("authjs"));
+    .filter((c) => {
+      const name = c.split("=")[0].trim();
+      // Keep CSRF token — NextAuth needs it for sign-in
+      if (name.includes("csrf")) return false;
+      return name.startsWith("next-auth") || name.startsWith("__Secure-next-auth") || name.startsWith("authjs");
+    });
   for (const cookie of authCookies) {
     const name = cookie.split("=")[0];
     document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
