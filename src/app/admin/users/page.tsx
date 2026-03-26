@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/fetch";
 
 type Assignment = {
   departmentId: string;
@@ -59,14 +60,14 @@ export default function UsersPage() {
   const [deleting, setDeleting] = useState(false);
 
   async function loadUsers() {
-    const res = await fetch("/api/users");
+    const res = await apiFetch("/api/users");
     const data = await res.json();
     setUsers(data);
     setLoading(false);
   }
 
   async function loadDepartments() {
-    const res = await fetch("/api/functional-plans");
+    const res = await apiFetch("/api/functional-plans");
     const data = await res.json();
     if (data.departments) {
       setDepartments(data.departments.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })));
@@ -111,7 +112,7 @@ export default function UsersPage() {
       if (form.departmentId !== (editingUser.departmentId || ""))
         body.departmentId = form.departmentId || "";
 
-      const res = await fetch("/api/users", {
+      const res = await apiFetch("/api/users", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -128,7 +129,7 @@ export default function UsersPage() {
         setSaving(false);
         return;
       }
-      const res = await fetch("/api/users", {
+      const res = await apiFetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -180,7 +181,7 @@ export default function UsersPage() {
   async function saveAssignments() {
     if (!assignUser) return;
     setSavingAssign(true);
-    await fetch("/api/users/assignments", {
+    await apiFetch("/api/users/assignments", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: assignUser.id, assignments: tempAssignments }),
@@ -196,7 +197,7 @@ export default function UsersPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     setDeleteError("");
-    const res = await fetch(`/api/users?id=${deleteTarget.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/users?id=${deleteTarget.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
       setDeleteError(data.error || "Cannot delete");

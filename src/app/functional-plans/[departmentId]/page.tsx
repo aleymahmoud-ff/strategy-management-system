@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/fetch";
 import { SubmissionBanner } from "@/components/functional-plans/submission-banner";
 import { ObjectivesSection } from "@/components/functional-plans/objectives-section";
 import { ActionsSection } from "@/components/functional-plans/actions-section";
@@ -63,7 +64,7 @@ export default function SubmissionFormPage() {
 
   // Load periods list for admin
   useEffect(() => {
-    fetch("/api/periods")
+    apiFetch("/api/periods")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => {
         if (Array.isArray(data)) {
@@ -80,7 +81,7 @@ export default function SubmissionFormPage() {
     const url = periodId
       ? `/api/functional-plans/${departmentId}?periodId=${periodId}`
       : `/api/functional-plans/${departmentId}`;
-    fetch(url)
+    apiFetch(url)
       .then((r) => r.json())
       .then((d) => {
         setData(d);
@@ -102,7 +103,7 @@ export default function SubmissionFormPage() {
       if (submitted) return;
       setSaving(true);
       try {
-        await fetch(`/api/functional-plans/${departmentId}`, {
+        await apiFetch(`/api/functional-plans/${departmentId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -175,7 +176,7 @@ export default function SubmissionFormPage() {
     // Save current state first
     await saveDraft(data.objectives, data.actions);
     // Then submit
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/functional-plans/${departmentId}/submit`,
       { method: "POST" }
     );

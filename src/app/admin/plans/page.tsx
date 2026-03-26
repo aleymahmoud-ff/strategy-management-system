@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/fetch";
 
 type Department = {
   id: string;
@@ -26,7 +27,7 @@ export default function PlansOverviewPage() {
   const [deleteError, setDeleteError] = useState("");
 
   async function loadDepartments() {
-    const res = await fetch("/api/departments");
+    const res = await apiFetch("/api/departments");
     if (res.ok) {
       setDepartments(await res.json());
     }
@@ -57,7 +58,7 @@ export default function PlansOverviewPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/departments", {
+      const res = await apiFetch("/api/departments", {
         method: editingId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingId ? { id: editingId, ...form } : form),
@@ -81,7 +82,7 @@ export default function PlansOverviewPage() {
     if (!deleteTarget) return;
     setSaving(true);
     setDeleteError("");
-    const res = await fetch(`/api/departments?id=${deleteTarget.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/departments?id=${deleteTarget.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
       setDeleteError(data.error || "Cannot delete");

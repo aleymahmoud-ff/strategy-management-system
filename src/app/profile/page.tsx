@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { apiFetch } from "@/lib/fetch";
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
@@ -69,7 +70,7 @@ export default function ProfilePage() {
         imageData = null; // explicitly removing photo
       }
 
-      const res = await fetch("/api/profile", {
+      const res = await apiFetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, image: imageData }),
@@ -104,7 +105,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/profile/password", {
+      const res = await apiFetch("/api/profile/password", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),

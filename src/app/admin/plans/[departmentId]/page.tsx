@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/fetch";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DIRECTIONS = [
@@ -129,9 +130,9 @@ export default function DepartmentPlanPage() {
 
   async function loadData() {
     const [objRes, actRes, divRes] = await Promise.all([
-      fetch(`/api/objectives?departmentId=${departmentId}`),
-      fetch(`/api/actions?departmentId=${departmentId}`),
-      fetch(`/api/functional-plans`),
+      apiFetch(`/api/objectives?departmentId=${departmentId}`),
+      apiFetch(`/api/actions?departmentId=${departmentId}`),
+      apiFetch(`/api/functional-plans`),
     ]);
     setObjectives(await objRes.json());
     setActions(await actRes.json());
@@ -206,7 +207,7 @@ export default function DepartmentPlanPage() {
       const payload = editingObj
         ? { id: editingObj.id, ...objForm }
         : { ...objForm, departmentId };
-      const res = await fetch("/api/objectives", {
+      const res = await apiFetch("/api/objectives", {
         method: editingObj ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -264,7 +265,7 @@ export default function DepartmentPlanPage() {
       const payload = editingAct
         ? { id: editingAct.id, ...actForm }
         : { ...actForm, departmentId };
-      const res = await fetch("/api/actions", {
+      const res = await apiFetch("/api/actions", {
         method: editingAct ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -299,7 +300,7 @@ export default function DepartmentPlanPage() {
     setDeleting(true);
     setDeleteError("");
     const endpoint = deleteModal.type === "objective" ? "objectives" : "actions";
-    const res = await fetch(`/api/${endpoint}?id=${deleteModal.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/${endpoint}?id=${deleteModal.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setDeleteError(data.error || "Failed to delete");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/fetch";
 
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
@@ -29,7 +30,7 @@ export default function PeriodsPage() {
   const [deleteError, setDeleteError] = useState("");
 
   async function loadPeriods() {
-    const res = await fetch("/api/periods");
+    const res = await apiFetch("/api/periods");
     const data = await res.json();
     setPeriods(data);
     setLoading(false);
@@ -47,7 +48,7 @@ export default function PeriodsPage() {
     setError("");
     setSaving(true);
     try {
-      const res = await fetch("/api/periods", {
+      const res = await apiFetch("/api/periods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -68,7 +69,7 @@ export default function PeriodsPage() {
   }
 
   async function setActive(id: string) {
-    await fetch("/api/periods", {
+    await apiFetch("/api/periods", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, isActive: true }),
@@ -82,7 +83,7 @@ export default function PeriodsPage() {
   }
 
   async function saveDeadline(id: string) {
-    await fetch("/api/periods", {
+    await apiFetch("/api/periods", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, deadline: editDeadline }),
@@ -95,7 +96,7 @@ export default function PeriodsPage() {
     if (!deleteTarget) return;
     setSaving(true);
     setDeleteError("");
-    const res = await fetch(`/api/periods?id=${deleteTarget.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/periods?id=${deleteTarget.id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
       setDeleteError(data.error || "Cannot delete");
