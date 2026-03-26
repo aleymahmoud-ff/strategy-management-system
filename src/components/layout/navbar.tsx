@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { logoutAction } from "@/app/login/logout-action";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", roles: ["STRATEGY_MANAGER", "EXECUTIVE"] },
@@ -38,7 +39,7 @@ export function Navbar() {
     }
   }, [menuOpen]);
 
-  if (!session) return null;
+  if (!session || pathname === "/login") return null;
 
   const { name, email, role, image } = session.user;
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role));
@@ -162,7 +163,7 @@ export function Navbar() {
                 {/* Logout */}
                 <div className="border-t border-border py-1.5">
                   <button
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    onClick={() => logoutAction()}
                     className="flex w-full items-center gap-3 px-4 py-2 text-[13px] text-red transition-colors hover:bg-bg-mid"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
