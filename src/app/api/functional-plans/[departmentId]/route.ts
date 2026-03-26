@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saveDraftSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 // GET: Load form data for a department
 export async function GET(
   req: NextRequest,

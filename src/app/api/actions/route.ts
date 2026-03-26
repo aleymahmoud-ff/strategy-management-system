@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const actionSchema = z.object({
   description: z.string().min(1, "Description is required"),
   dueDate: z.string().min(1, "Due date is required"),

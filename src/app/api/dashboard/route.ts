@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeProgress, computeDeviations, deriveStatus } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session || session.user.role === "FUNCTION_HEAD") {

@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const periodSchema = z.object({
   year: z.number().min(2020).max(2100),
   month: z.number().min(1).max(12),

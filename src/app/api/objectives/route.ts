@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const PERIOD_LENGTHS: Record<string, number> = {
   MONTHLY: 12,
   QUARTERLY: 4,

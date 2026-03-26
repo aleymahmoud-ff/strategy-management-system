@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { userCreateSchema, userUpdateSchema } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 // GET: List all users
 export async function GET() {
   const session = await auth();
