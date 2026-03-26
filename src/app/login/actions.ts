@@ -2,19 +2,24 @@
 
 import { signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export async function loginAction(email: string, password: string) {
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirect: false,
     });
+    return { success: true, error: null };
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Invalid email/username or password" };
+    if (isRedirectError(error)) {
+      // signIn succeeded but tried to redirect — treat as success
+      return { success: true, error: null };
     }
-    // next-auth v5 throws NEXT_REDIRECT on success — re-throw so Next.js handles it
-    throw error;
+    if (error instanceof AuthError) {
+      return { error: "Invalid email/username or password", success: false };
+    }
+    return { error: "Something went wrong. Please try again.", success: false };
   }
 }
