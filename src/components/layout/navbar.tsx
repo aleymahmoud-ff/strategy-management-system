@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/admin/plans", label: "Plan Builder", roles: ["STRATEGY_MANAGER"] },
   { href: "/admin/periods", label: "Periods", roles: ["STRATEGY_MANAGER"] },
   { href: "/admin/users", label: "Users", roles: ["STRATEGY_MANAGER"] },
+  { href: "/guide", label: "Guide", roles: ["STRATEGY_MANAGER", "FUNCTION_HEAD", "EXECUTIVE"] },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
