@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useTransition } from "react";
+import { loginAction } from "./actions";
 
 export default function LoginForm() {
   const [login, setLogin] = useState("");
@@ -9,31 +9,18 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    try {
-      const result = await signIn("credentials", {
-        email: login,
-        password,
-        redirect: false,
-      });
-
+    startTransition(async () => {
+      const result = await loginAction(login, password);
       if (result?.error) {
-        setLoading(false);
-        setError("Invalid email/username or password");
-        return;
+        setError(result.error);
       }
-
-      window.location.href = "/";
-    } catch {
-      setLoading(false);
-      setError("Something went wrong. Please try again.");
-    }
+    });
   }
 
   return (
@@ -140,10 +127,10 @@ export default function LoginForm() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="relative overflow-hidden rounded-lg bg-brown px-5 py-2.5 text-[13px] font-semibold text-bg-page transition-all duration-200 hover:bg-brown-dk hover:shadow-[0_0_20px_rgba(201,162,77,0.2)] disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {isPending ? "Signing in..." : "Sign In"}
             </button>
           </form>
         </div>
