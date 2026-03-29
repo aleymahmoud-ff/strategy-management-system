@@ -6,19 +6,32 @@ const publicPaths = ["/login", "/api/auth", "/api/health", "/api/"];
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Allow public paths
+  // Allow API paths
   if (publicPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
   const token = req.auth;
+  const role = token?.user?.role;
 
-  // Not authenticated -> redirect to login
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  // Extract segments: /{tenant}/login, /{tenant}/dashboard, etc.
+  const segments = pathname.split("/").filter(Boolean);
+  const firstSegment = segments[0];
+  const restPath = "/" + segments.slice(1).join("/");
+
+  // Allow tenant login pages (/{tenant}/login) without auth
+  if (segments.length >= 2 && restPath === "/login") {
+    return NextResponse.next();
   }
 
-  const role = token.user?.role;
+  // Not authenticated
+  if (!token) {
+    // If on a tenant path, redirect to tenant login
+    if (firstSegment && firstSegment !== "login" && firstSegment !== "super-admin") {
+      return NextResponse.redirect(new URL(`/${firstSegment}/login`, req.url));
+    }
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 
   // /super-admin/* — only SUPER_ADMIN can access
   if (pathname.startsWith("/super-admin")) {
@@ -33,12 +46,13 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/super-admin/tenants", req.url));
   }
 
-  // /{tenant}/... routes — tenant is determined by URL, not user
-  const segments = pathname.split("/").filter(Boolean);
-  const restPath = "/" + segments.slice(1).join("/");
+  // Non-SUPER_ADMIN trying to access root super admin
+  if (firstSegment === "super-admin" && role !== "SUPER_ADMIN") {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 
-  // Role-based access control within the tenant
-  const urlTenant = segments[0];
+  // /{tenant}/... routes — role-based access within tenant
+  const urlTenant = firstSegment;
 
   if (restPath.startsWith("/dashboard") && role === "FUNCTION_HEAD") {
     return NextResponse.redirect(new URL(`/${urlTenant}/functional-plans`, req.url));

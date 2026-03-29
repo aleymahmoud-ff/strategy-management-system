@@ -44,7 +44,7 @@ export function Navbar() {
     }
   }, [menuOpen]);
 
-  if (!session || pathname === "/login") return null;
+  if (!session || pathname === "/login" || pathname.endsWith("/login")) return null;
 
   const { name, email, role, image, organizationName, organizationSlug } = session.user;
   const prefix = organizationSlug ? `/${organizationSlug}` : "";

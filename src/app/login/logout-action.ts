@@ -1,7 +1,10 @@
 "use server";
 
-import { signOut } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 
 export async function logoutAction() {
-  await signOut({ redirectTo: "/login" });
+  const session = await auth();
+  const slug = session?.user?.organizationSlug;
+  const redirectTo = slug ? `/${slug}/login` : "/login";
+  await signOut({ redirectTo });
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { loginAction } from "./actions";
+import { loginAction } from "@/app/login/actions";
 
-export default function LoginForm() {
+export default function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,7 +16,7 @@ export default function LoginForm() {
     setError("");
 
     startTransition(async () => {
-      const result = await loginAction(login, password);
+      const result = await loginAction(login, password, tenantSlug);
       if (result?.success) {
         window.location.href = result.redirectTo || "/";
         return;
