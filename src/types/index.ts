@@ -7,7 +7,7 @@ declare module "next-auth" {
       email: string;
       name: string;
       image: string | null;
-      role: "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
+      role: "SUPER_ADMIN" | "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
       departmentId: string | null;
       organizationId: string;
       organizationName: string;
@@ -30,7 +30,7 @@ declare module "next-auth" {
   }
 }
 
-export type Role = "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
+export type Role = "SUPER_ADMIN" | "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
 
 export type ActionStatus =
   | "COMPLETE"

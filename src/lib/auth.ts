@@ -46,9 +46,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             image: user.image,
             role: user.role,
             departmentId: user.departmentId,
-            organizationId: user.organizationId,
-            organizationName: user.organization.name,
-            organizationSlug: user.organization.slug,
+            organizationId: user.organizationId ?? "",
+            organizationName: user.organization?.name ?? "",
+            organizationSlug: user.organization?.slug ?? "",
             assignments: user.assignments.map((a) => ({
               departmentId: a.departmentId,
               permission: a.permission,
@@ -81,7 +81,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       session.user.id = token.id as string;
-      session.user.role = token.role as "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
+      session.user.role = token.role as "SUPER_ADMIN" | "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
       session.user.image = (token.image as string | null) ?? null;
       session.user.departmentId = (token.departmentId as string | null) ?? null;
       session.user.organizationId = token.organizationId as string;

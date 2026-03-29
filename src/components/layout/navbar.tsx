@@ -16,6 +16,10 @@ const NAV_ITEMS = [
   { href: "/guide", label: "Guide", roles: ["STRATEGY_MANAGER", "FUNCTION_HEAD", "EXECUTIVE"] },
 ];
 
+const SUPER_ADMIN_ITEMS = [
+  { href: "/super-admin/tenants", label: "Tenants" },
+];
+
 const ROLE_LABELS: Record<string, string> = {
   STRATEGY_MANAGER: "Strategy Manager",
   FUNCTION_HEAD: "Function Head",
@@ -44,10 +48,12 @@ export function Navbar() {
 
   const { name, email, role, image, organizationName, organizationSlug } = session.user;
   const prefix = organizationSlug ? `/${organizationSlug}` : "";
-  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role)).map((item) => ({
-    ...item,
-    href: `${prefix}${item.href}`,
-  }));
+  const visibleItems = role === "SUPER_ADMIN"
+    ? SUPER_ADMIN_ITEMS
+    : NAV_ITEMS.filter((item) => item.roles.includes(role)).map((item) => ({
+        ...item,
+        href: `${prefix}${item.href}`,
+      }));
   const initials = name
     .split(" ")
     .map((n) => n[0])

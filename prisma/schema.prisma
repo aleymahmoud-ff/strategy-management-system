@@ -26,11 +26,11 @@ model User {
   name           String
   image          String?          // Profile photo URL
   passwordHash   String
-  role           String           // FUNCTION_HEAD | STRATEGY_MANAGER | EXECUTIVE
+  role           String           // SUPER_ADMIN | FUNCTION_HEAD | STRATEGY_MANAGER | EXECUTIVE
   departmentId   String?          // Legacy — kept for backward compat
   department     Department?      @relation(fields: [departmentId], references: [id])
-  organizationId String
-  organization   Organization     @relation(fields: [organizationId], references: [id])
+  organizationId String?          // Null for SUPER_ADMIN (platform-level user)
+  organization   Organization?    @relation(fields: [organizationId], references: [id])
   assignments    UserDepartment[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt

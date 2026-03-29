@@ -21,6 +21,24 @@ export default auth((req) => {
   const role = token.user?.role;
   const slug = (token.user as { organizationSlug?: string })?.organizationSlug;
 
+  // SUPER_ADMIN routes
+  if (role === "SUPER_ADMIN") {
+    // Allow /super-admin/* paths
+    if (pathname.startsWith("/super-admin")) {
+      return NextResponse.next();
+    }
+    // Redirect SUPER_ADMIN away from tenant routes to their panel
+    return NextResponse.redirect(new URL("/super-admin/tenants", req.url));
+  }
+
+  // Non-SUPER_ADMIN users cannot access /super-admin
+  if (pathname.startsWith("/super-admin")) {
+    if (slug) {
+      return NextResponse.redirect(new URL(`/${slug}/`, req.url));
+    }
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
   // Root path -> redirect to tenant root
   if (pathname === "/") {
     if (slug) {
