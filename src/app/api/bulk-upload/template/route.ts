@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export const dynamic = "force-dynamic";
 
@@ -9,17 +9,22 @@ const UNITS = ["%", "SAR", "USD", "EGP", "count", "days", "score", "ratio", "per
 const DIRECTIONS = [">=", ">", "<=", "<", "="];
 const PERIODS = ["MONTHLY", "QUARTERLY", "HALF_ANNUAL", "ANNUAL"];
 const FREQUENCIES = ["MONTHLY", "QUARTERLY"];
+const MODES = ["add", "replace"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function addDropdown(ws: XLSX.WorkSheet, ref: string, values: string[]) {
-  if (!ws["!dataValidation"]) (ws as Record<string, unknown>)["!dataValidation"] = [];
-  (ws["!dataValidation"] as unknown[]).push({
-    ref,
-    type: "list",
-    formula1: `"${values.join(",")}"`,
-  });
+function applyDropdown(col: Partial<ExcelJS.Column>, ws: ExcelJS.Worksheet, colIdx: number, values: string[], rowCount: number) {
+  for (let r = 2; r <= rowCount; r++) {
+    ws.getCell(r, colIdx).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`"${values.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Invalid value",
+      error: `Must be one of: ${values.join(", ")}`,
+    };
+  }
 }
 
-// GET: Download Excel template with dropdowns populated from tenant data
 export async function GET() {
   const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
   if (error) return error;
@@ -29,97 +34,101 @@ export async function GET() {
     orderBy: { sortOrder: "asc" },
     select: { name: true },
   });
-
   const deptNames = departments.map((d) => d.name);
-  const MAX_ROWS = 200; // Pre-apply validation for up to 200 rows
+  const MAX_ROWS = 200;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Strategy Management System";
 
   // ── Objectives Sheet ──
-  const objectivesHeaders = [
-    "Department", "Mode (add/replace)", "Statement", "Unit", "Target Direction",
+  const wsObj = wb.addWorksheet("Objectives");
+
+  const objHeaders = [
+    "Department", "Mode", "Statement", "Unit", "Target Direction",
     "Target Period", "Tracking Period",
-    "Jan Baseline", "Feb Baseline", "Mar Baseline", "Apr Baseline", "May Baseline", "Jun Baseline",
-    "Jul Baseline", "Aug Baseline", "Sep Baseline", "Oct Baseline", "Nov Baseline", "Dec Baseline",
-    "Jan Target", "Feb Target", "Mar Target", "Apr Target", "May Target", "Jun Target",
-    "Jul Target", "Aug Target", "Sep Target", "Oct Target", "Nov Target", "Dec Target",
+    ...MONTHS.map((m) => `${m} Baseline`),
+    ...MONTHS.map((m) => `${m} Target`),
   ];
 
-  const objectivesData = [
-    objectivesHeaders,
-    [deptNames[0] || "Department Name", "add", "Increase revenue by 15%", "%", ">=", "MONTHLY", "MONTHLY",
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     1.2, 2.5, 3.8, 5.0, 6.3, 7.5, 8.8, 10.0, 11.3, 12.5, 13.8, 15],
-    [deptNames[0] || "Department Name", "add", "Reduce turnaround to 2 days", "days", "<=", "MONTHLY", "MONTHLY",
-     4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5,
-     4.2, 4.0, 3.8, 3.5, 3.3, 3.0, 2.8, 2.6, 2.4, 2.2, 2.0, 2.0],
-  ];
+  wsObj.columns = objHeaders.map((h, i) => ({
+    header: h,
+    key: h,
+    width: i === 0 ? 22 : i === 1 ? 12 : i === 2 ? 40 : i <= 6 ? 16 : 12,
+  }));
 
-  const wsObj = XLSX.utils.aoa_to_sheet(objectivesData);
-  wsObj["!cols"] = [
-    { wch: 22 }, { wch: 14 }, { wch: 40 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
-    ...Array(24).fill({ wch: 12 }),
-  ];
+  // Style header row
+  wsObj.getRow(1).font = { bold: true, size: 11 };
+  wsObj.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A1F38" } };
+  wsObj.getRow(1).font = { bold: true, color: { argb: "FFEDE8DC" }, size: 10 };
 
-  // Add data validation (dropdowns) for each column
-  for (let r = 2; r <= MAX_ROWS; r++) {
-    // Column A: Department
-    addDropdown(wsObj, `A${r}`, deptNames);
-    // Column B: Mode
-    addDropdown(wsObj, `B${r}`, ["add", "replace"]);
-    // Column D: Unit
-    addDropdown(wsObj, `D${r}`, UNITS);
-    // Column E: Target Direction
-    addDropdown(wsObj, `E${r}`, DIRECTIONS);
-    // Column F: Target Period
-    addDropdown(wsObj, `F${r}`, PERIODS);
-    // Column G: Tracking Period
-    addDropdown(wsObj, `G${r}`, PERIODS);
-  }
+  // Example rows
+  wsObj.addRow([
+    deptNames[0] || "Department", "add", "Increase revenue by 15%", "%", ">=", "MONTHLY", "MONTHLY",
+    ...Array(12).fill(0),
+    1.2, 2.5, 3.8, 5.0, 6.3, 7.5, 8.8, 10.0, 11.3, 12.5, 13.8, 15,
+  ]);
+  wsObj.addRow([
+    deptNames[0] || "Department", "add", "Reduce turnaround to 2 days", "days", "<=", "MONTHLY", "MONTHLY",
+    ...Array(12).fill(4.5),
+    4.2, 4.0, 3.8, 3.5, 3.3, 3.0, 2.8, 2.6, 2.4, 2.2, 2.0, 2.0,
+  ]);
+
+  // Apply dropdowns
+  if (deptNames.length > 0) applyDropdown({}, wsObj, 1, deptNames, MAX_ROWS);  // Department
+  applyDropdown({}, wsObj, 2, MODES, MAX_ROWS);       // Mode
+  applyDropdown({}, wsObj, 4, UNITS, MAX_ROWS);        // Unit
+  applyDropdown({}, wsObj, 5, DIRECTIONS, MAX_ROWS);   // Target Direction
+  applyDropdown({}, wsObj, 6, PERIODS, MAX_ROWS);      // Target Period
+  applyDropdown({}, wsObj, 7, PERIODS, MAX_ROWS);      // Tracking Period
 
   // ── Actions Sheet ──
-  const actionsHeaders = ["Department", "Mode (add/replace)", "Description", "Due Date", "Owner", "Frequency"];
-  const actionsData = [
-    actionsHeaders,
-    [deptNames[0] || "Department Name", "add", "Launch Q1 outreach campaign", "2026-03-31", "John Smith", "MONTHLY"],
-    [deptNames[0] || "Department Name", "add", "Onboard new sales reps", "2026-04-15", "Jane Doe", "QUARTERLY"],
+  const wsAct = wb.addWorksheet("Actions");
+
+  wsAct.columns = [
+    { header: "Department", key: "Department", width: 22 },
+    { header: "Mode", key: "Mode", width: 12 },
+    { header: "Description", key: "Description", width: 45 },
+    { header: "Due Date", key: "Due Date", width: 15 },
+    { header: "Owner", key: "Owner", width: 20 },
+    { header: "Frequency", key: "Frequency", width: 15 },
   ];
 
-  const wsAct = XLSX.utils.aoa_to_sheet(actionsData);
-  wsAct["!cols"] = [{ wch: 22 }, { wch: 14 }, { wch: 45 }, { wch: 15 }, { wch: 20 }, { wch: 15 }];
+  wsAct.getRow(1).font = { bold: true, color: { argb: "FFEDE8DC" }, size: 10 };
+  wsAct.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A1F38" } };
 
-  for (let r = 2; r <= MAX_ROWS; r++) {
-    addDropdown(wsAct, `A${r}`, deptNames);
-    addDropdown(wsAct, `B${r}`, ["add", "replace"]);
-    addDropdown(wsAct, `F${r}`, FREQUENCIES);
-  }
+  wsAct.addRow([deptNames[0] || "Department", "add", "Launch Q1 outreach campaign", "2026-03-31", "John Smith", "MONTHLY"]);
+  wsAct.addRow([deptNames[0] || "Department", "add", "Onboard new sales reps", "2026-04-15", "Jane Doe", "QUARTERLY"]);
+
+  if (deptNames.length > 0) applyDropdown({}, wsAct, 1, deptNames, MAX_ROWS);
+  applyDropdown({}, wsAct, 2, MODES, MAX_ROWS);
+  applyDropdown({}, wsAct, 6, FREQUENCIES, MAX_ROWS);
 
   // ── Reference Sheet ──
-  const referenceData: (string | number)[][] = [
-    ["Field", "Valid Values", "Description"],
-    ["Department", "", "Your organization's departments (see dropdown)"],
-    ["Mode", "add, replace", "add = create new if not exists, skip if exists. replace = update if exists, create if not."],
-    ["Unit", UNITS.join(", "), "Unit of measure for the objective"],
-    ["Target Direction", DIRECTIONS.join(", "), ">= higher is better, <= lower is better, = exact match"],
-    ["Target Period", PERIODS.join(", "), "How often targets are set"],
-    ["Tracking Period", PERIODS.join(", "), "How often actuals are reported (must be same or more frequent than target)"],
-    ["Frequency", FREQUENCIES.join(", "), "How often the action is tracked"],
-    ["Due Date", "YYYY-MM-DD", "e.g. 2026-03-31"],
-    [],
-    ["Your Departments:"],
+  const wsRef = wb.addWorksheet("Reference");
+
+  wsRef.columns = [
+    { header: "Field", key: "field", width: 20 },
+    { header: "Valid Values", key: "values", width: 60 },
+    { header: "Description", key: "desc", width: 50 },
   ];
+
+  wsRef.getRow(1).font = { bold: true, color: { argb: "FFEDE8DC" }, size: 10 };
+  wsRef.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A1F38" } };
+
+  wsRef.addRow(["Mode", "add, replace", "add = skip if exists. replace = update if exists."]);
+  wsRef.addRow(["Unit", UNITS.join(", "), "Unit of measure"]);
+  wsRef.addRow(["Target Direction", DIRECTIONS.join(", "), ">= higher is better, <= lower is better"]);
+  wsRef.addRow(["Target Period", PERIODS.join(", "), "How often targets are set"]);
+  wsRef.addRow(["Tracking Period", PERIODS.join(", "), "How often actuals are reported"]);
+  wsRef.addRow(["Frequency", FREQUENCIES.join(", "), "How often the action is tracked"]);
+  wsRef.addRow(["Due Date", "YYYY-MM-DD", "e.g. 2026-03-31"]);
+  wsRef.addRow([]);
+  wsRef.addRow(["Your Departments:"]);
   for (const name of deptNames) {
-    referenceData.push(["", name]);
+    wsRef.addRow(["", name]);
   }
 
-  const wsRef = XLSX.utils.aoa_to_sheet(referenceData);
-  wsRef["!cols"] = [{ wch: 20 }, { wch: 60 }, { wch: 50 }];
-
-  // ── Build Workbook ──
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, wsObj, "Objectives");
-  XLSX.utils.book_append_sheet(wb, wsAct, "Actions");
-  XLSX.utils.book_append_sheet(wb, wsRef, "Reference");
-
-  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  const buffer = await wb.xlsx.writeBuffer();
 
   return new NextResponse(buffer, {
     headers: {
