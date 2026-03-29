@@ -8,9 +8,6 @@ export default async function Home() {
     redirect("/login");
   }
 
-  if (session.user.role === "SUPER_ADMIN") {
-    redirect("/super-admin/tenants");
-  }
-
-  redirect(`/${session.user.organizationSlug}/`);
+  // Root always goes to super admin tenant management
+  redirect("/super-admin/tenants");
 }

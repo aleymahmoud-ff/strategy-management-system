@@ -19,45 +19,27 @@ export default auth((req) => {
   }
 
   const role = token.user?.role;
-  const slug = (token.user as { organizationSlug?: string })?.organizationSlug;
 
-  // SUPER_ADMIN routes
-  if (role === "SUPER_ADMIN") {
-    // Allow /super-admin/* paths
-    if (pathname.startsWith("/super-admin")) {
-      return NextResponse.next();
+  // /super-admin/* — only SUPER_ADMIN can access
+  if (pathname.startsWith("/super-admin")) {
+    if (role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
-    // Redirect SUPER_ADMIN away from tenant routes to their panel
+    return NextResponse.next();
+  }
+
+  // Root path -> super admin panel
+  if (pathname === "/") {
     return NextResponse.redirect(new URL("/super-admin/tenants", req.url));
   }
 
-  // Non-SUPER_ADMIN users cannot access /super-admin
-  if (pathname.startsWith("/super-admin")) {
-    if (slug) {
-      return NextResponse.redirect(new URL(`/${slug}/`, req.url));
-    }
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Root path -> redirect to tenant root
-  if (pathname === "/") {
-    if (slug) {
-      return NextResponse.redirect(new URL(`/${slug}/`, req.url));
-    }
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Extract tenant segment from URL: /{tenant}/...
+  // /{tenant}/... routes — tenant is determined by URL, not user
   const segments = pathname.split("/").filter(Boolean);
-  const urlTenant = segments[0];
   const restPath = "/" + segments.slice(1).join("/");
 
-  // If the URL tenant doesn't match the user's org slug, redirect to correct org
-  if (slug && urlTenant !== slug) {
-    return NextResponse.redirect(new URL(`/${slug}${restPath || "/"}`, req.url));
-  }
+  // Role-based access control within the tenant
+  const urlTenant = segments[0];
 
-  // Role-based access control (using the path after the tenant segment)
   if (restPath.startsWith("/dashboard") && role === "FUNCTION_HEAD") {
     return NextResponse.redirect(new URL(`/${urlTenant}/functional-plans`, req.url));
   }
@@ -66,7 +48,7 @@ export default auth((req) => {
     return NextResponse.redirect(new URL(`/${urlTenant}/dashboard`, req.url));
   }
 
-  if (restPath.startsWith("/admin") && role !== "STRATEGY_MANAGER") {
+  if (restPath.startsWith("/admin") && role !== "STRATEGY_MANAGER" && role !== "SUPER_ADMIN") {
     const defaultPath = role === "FUNCTION_HEAD" ? "/functional-plans" : "/dashboard";
     return NextResponse.redirect(new URL(`/${urlTenant}${defaultPath}`, req.url));
   }

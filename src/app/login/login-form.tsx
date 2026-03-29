@@ -18,8 +18,7 @@ export default function LoginForm() {
     startTransition(async () => {
       const result = await loginAction(login, password);
       if (result?.success) {
-        // Full page reload to ensure layout re-renders with fresh session
-        window.location.href = "/";
+        window.location.href = result.redirectTo || "/";
         return;
       }
       if (result?.error) {

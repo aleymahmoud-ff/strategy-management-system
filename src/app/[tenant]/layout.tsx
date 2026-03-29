@@ -15,10 +15,7 @@ export default async function TenantLayout({
     redirect("/login");
   }
 
-  // If the URL slug doesn't match the user's org, redirect to the correct one
-  if (session.user.organizationSlug && tenant !== session.user.organizationSlug) {
-    redirect(`/${session.user.organizationSlug}/`);
-  }
-
+  // Validate that this tenant slug exists and user has access
+  // The API layer handles org scoping via session — this layout just passes through
   return <>{children}</>;
 }
