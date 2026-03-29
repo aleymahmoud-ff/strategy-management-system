@@ -18,6 +18,7 @@ const UNIT_TYPES = [
   { value: "%", label: "Percentage (%)", prefix: "", suffix: "%", decimals: 1 },
   { value: "SAR", label: "Currency (SAR)", prefix: "SAR ", suffix: "", decimals: 0 },
   { value: "USD", label: "Currency (USD)", prefix: "$", suffix: "", decimals: 0 },
+  { value: "EGP", label: "Currency (EGP)", prefix: "EGP ", suffix: "", decimals: 0 },
   { value: "count", label: "Count (#)", prefix: "", suffix: "", decimals: 0 },
   { value: "days", label: "Days", prefix: "", suffix: " days", decimals: 1 },
   { value: "score", label: "Score", prefix: "", suffix: " pts", decimals: 0 },
