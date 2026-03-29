@@ -23,6 +23,7 @@ const UNIT_TYPES = [
   { value: "days", label: "Days", prefix: "", suffix: " days", decimals: 1 },
   { value: "score", label: "Score", prefix: "", suffix: " pts", decimals: 0 },
   { value: "ratio", label: "Ratio", prefix: "", suffix: "x", decimals: 2 },
+  { value: "per-n", label: "Rate (1 per N)", prefix: "1/", suffix: "", decimals: 0 },
   { value: "hours", label: "Hours", prefix: "", suffix: " hrs", decimals: 1 },
   { value: "incidents", label: "Incidents", prefix: "", suffix: "", decimals: 0 },
   { value: "leads", label: "Leads", prefix: "", suffix: "", decimals: 0 },
@@ -31,6 +32,9 @@ const UNIT_TYPES = [
 ];
 
 function formatValue(val: number, unit: string): string {
+  if (unit === "per-n") {
+    return `1/${Math.round(val).toLocaleString()}`;
+  }
   const ut = UNIT_TYPES.find((u) => u.value === unit) || UNIT_TYPES[UNIT_TYPES.length - 1];
   const formatted = ut.decimals === 0 ? Math.round(val).toString() : val.toFixed(ut.decimals);
   return `${ut.prefix}${formatted}${ut.suffix}`;
