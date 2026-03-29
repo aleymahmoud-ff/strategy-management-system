@@ -11,6 +11,7 @@ declare module "next-auth" {
       departmentId: string | null;
       organizationId: string;
       organizationName: string;
+      organizationSlug: string;
       assignments: { departmentId: string; permission: "EDIT" | "VIEW_ONLY" }[];
     };
   }
@@ -24,6 +25,7 @@ declare module "next-auth" {
     departmentId: string | null;
     organizationId: string;
     organizationName: string;
+    organizationSlug: string;
     assignments: { departmentId: string; permission: string }[];
   }
 }

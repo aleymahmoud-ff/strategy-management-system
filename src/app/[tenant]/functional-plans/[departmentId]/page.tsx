@@ -48,7 +48,7 @@ type FormData = {
 type PeriodOption = { id: string; label: string };
 
 export default function SubmissionFormPage() {
-  const { departmentId } = useParams<{ departmentId: string }>();
+  const { tenant, departmentId } = useParams<{ tenant: string; departmentId: string }>();
   const router = useRouter();
   const [data, setData] = useState<FormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -213,6 +213,7 @@ export default function SubmissionFormPage() {
         departmentName={data.department.name}
         periodLabel={data.period.label}
         submittedAt={data.submission.submittedAt}
+        tenantSlug={tenant as string}
       />
     );
   }

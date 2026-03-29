@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/fetch";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -93,6 +94,8 @@ type Department = { id: string; name: string; headName: string; initials: string
 export default function DepartmentPlanPage() {
   const { departmentId } = useParams<{ departmentId: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
+  const slug = session?.user?.organizationSlug || "";
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [actions, setActions] = useState<KeyAction[]>([]);
   const [department, setDepartment] = useState<Department | null>(null);
@@ -333,7 +336,7 @@ export default function DepartmentPlanPage() {
       <div className="mb-8 flex items-start justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push("/admin/plans")}
+            onClick={() => router.push(`/${slug}/admin/plans`)}
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-sub hover:bg-bg-mid"
           >
             &larr;

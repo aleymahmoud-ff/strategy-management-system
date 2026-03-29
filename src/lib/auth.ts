@@ -23,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               ? { email: login }
               : { username: login },
             include: {
-              organization: { select: { id: true, name: true } },
+              organization: { select: { id: true, name: true, slug: true } },
               assignments: {
                 select: { departmentId: true, permission: true },
               },
@@ -48,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             departmentId: user.departmentId,
             organizationId: user.organizationId,
             organizationName: user.organization.name,
+            organizationSlug: user.organization.slug,
             assignments: user.assignments.map((a) => ({
               departmentId: a.departmentId,
               permission: a.permission,
@@ -73,6 +74,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.departmentId = user.departmentId as string | null;
         token.organizationId = user.organizationId as string;
         token.organizationName = user.organizationName as string;
+        token.organizationSlug = user.organizationSlug as string;
         token.assignments = user.assignments as { departmentId: string; permission: string }[];
       }
       return token;
@@ -84,6 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.departmentId = (token.departmentId as string | null) ?? null;
       session.user.organizationId = token.organizationId as string;
       session.user.organizationName = token.organizationName as string;
+      session.user.organizationSlug = token.organizationSlug as string;
       session.user.assignments = (token.assignments as { departmentId: string; permission: "EDIT" | "VIEW_ONLY" }[]) || [];
       return session;
     },

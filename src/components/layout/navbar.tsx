@@ -42,8 +42,12 @@ export function Navbar() {
 
   if (!session || pathname === "/login") return null;
 
-  const { name, email, role, image, organizationName } = session.user;
-  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role));
+  const { name, email, role, image, organizationName, organizationSlug } = session.user;
+  const prefix = organizationSlug ? `/${organizationSlug}` : "";
+  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role)).map((item) => ({
+    ...item,
+    href: `${prefix}${item.href}`,
+  }));
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -154,7 +158,7 @@ export function Navbar() {
                 {/* Menu items */}
                 <div className="py-1.5">
                   <Link
-                    href="/profile"
+                    href={`${prefix}/profile`}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-2 text-[13px] text-text-bd transition-colors hover:bg-bg-mid"
                   >

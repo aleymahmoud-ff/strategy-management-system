@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/fetch";
 
 type Department = {
@@ -16,6 +17,8 @@ type Department = {
 
 export default function PlansOverviewPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const slug = session?.user?.organizationSlug || "";
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -165,7 +168,7 @@ export default function PlansOverviewPage() {
                 )}
               </div>
 
-              <Link href={`/admin/plans/${div.id}`} className="block">
+              <Link href={`/${slug}/admin/plans/${div.id}`} className="block">
                 <div className="mb-4 flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-bg-deep text-sm font-bold text-brown">
                     {div.initials}

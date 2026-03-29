@@ -11,13 +11,13 @@ type Department = {
   permission: string;
 };
 
-export function DepartmentSelector({ departments }: { departments: Department[] }) {
+export function DepartmentSelector({ departments, tenantSlug }: { departments: Department[]; tenantSlug: string }) {
   return (
     <div className="grid grid-cols-3 gap-5">
       {departments.map((d, i) => (
         <Link
           key={d.id}
-          href={`/functional-plans/${d.id}`}
+          href={`/${tenantSlug}/functional-plans/${d.id}`}
           className={`animate-fade-in-up delay-${Math.min(i + 1, 6)} card-glow group rounded-xl border border-border bg-bg-card p-6 shadow-[0_1px_6px_rgba(0,0,0,0.25)] transition-all duration-300`}
         >
           <div className="mb-4 flex items-center gap-3">

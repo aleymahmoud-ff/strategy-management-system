@@ -8,9 +8,5 @@ export default async function Home() {
     redirect("/login");
   }
 
-  if (session.user.role === "FUNCTION_HEAD") {
-    redirect("/functional-plans");
-  }
-
-  redirect("/dashboard");
+  redirect(`/${session.user.organizationSlug}/`);
 }

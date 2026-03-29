@@ -10,7 +10,8 @@ import { DeviationsPanel } from "@/components/dashboard/deviations-panel";
 export default async function DashboardPage() {
   const session = await auth();
   if (!session) redirect("/login");
-  if (session.user.role === "FUNCTION_HEAD") redirect("/functional-plans");
+  const slug = session.user.organizationSlug;
+  if (session.user.role === "FUNCTION_HEAD") redirect(`/${slug}/functional-plans`);
 
   const period = await prisma.period.findFirst({ where: { isActive: true } });
   if (!period) {

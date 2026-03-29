@@ -4,12 +4,14 @@ type Props = {
   departmentName: string;
   periodLabel: string;
   submittedAt: string | null;
+  tenantSlug: string;
 };
 
 export function ConfirmationView({
   departmentName,
   periodLabel,
   submittedAt,
+  tenantSlug,
 }: Props) {
   const date = submittedAt
     ? new Date(submittedAt).toLocaleDateString("en-GB", {
@@ -51,7 +53,7 @@ export function ConfirmationView({
         <p className="mt-1 text-[12px] text-text-mut">Submitted on {date}</p>
 
         <Link
-          href="/functional-plans"
+          href={`/${tenantSlug}/functional-plans`}
           className="mt-8 inline-flex items-center gap-2 rounded-lg bg-brown px-6 py-2.5 text-[13px] font-semibold text-bg-page transition-all duration-200 hover:bg-brown-dk hover:shadow-[0_0_20px_rgba(201,162,77,0.2)]"
         >
           Back to Portal

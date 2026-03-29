@@ -6,13 +6,14 @@ import { DepartmentSelector } from "@/components/functional-plans/department-sel
 export default async function FunctionalPlansPage() {
   const session = await auth();
   if (!session) redirect("/login");
-  if (session.user.role === "EXECUTIVE") redirect("/dashboard");
+  const slug = session.user.organizationSlug;
+  if (session.user.role === "EXECUTIVE") redirect(`/${slug}/dashboard`);
 
   // Function heads with exactly one EDIT assignment go directly to that department
   if (session.user.role === "FUNCTION_HEAD") {
     const editAssignments = session.user.assignments.filter((a) => a.permission === "EDIT");
     if (editAssignments.length === 1 && session.user.assignments.length === 1) {
-      redirect(`/functional-plans/${editAssignments[0].departmentId}`);
+      redirect(`/${slug}/functional-plans/${editAssignments[0].departmentId}`);
     }
   }
 
@@ -71,7 +72,7 @@ export default async function FunctionalPlansPage() {
           {period.label} &middot; Select a department to view or submit their plan
         </p>
       </div>
-      <DepartmentSelector departments={data} />
+      <DepartmentSelector departments={data} tenantSlug={slug} />
     </main>
   );
 }

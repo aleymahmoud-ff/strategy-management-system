@@ -310,6 +310,8 @@ const PAGES_BY_ROLE: Record<Role, { name: string; path: string; description: str
 
 export default function GuidePage() {
   const { data: session } = useSession();
+  const slug = session?.user?.organizationSlug || "";
+  const orgPath = (p: string) => `/${slug}${p}`;
   const userRole = session?.user?.role as Role | undefined;
   const [activeRole, setActiveRole] = useState<Role>(userRole || "STRATEGY_MANAGER");
 
@@ -377,7 +379,7 @@ export default function GuidePage() {
           {PAGES_BY_ROLE[activeRole].map((page) => (
             <Link
               key={page.path}
-              href={page.path}
+              href={orgPath(page.path)}
               className="group rounded-lg border border-border bg-bg-card p-4 transition-all hover:border-brown/30 hover:shadow-[0_0_16px_rgba(201,162,77,0.08)]"
             >
               <div className="text-[14px] font-semibold text-text-hd group-hover:text-brown">
@@ -432,7 +434,7 @@ export default function GuidePage() {
                       </span>
                       {step.link && (
                         <Link
-                          href={step.link}
+                          href={orgPath(step.link)}
                           className="rounded-md bg-bg-deep px-2 py-0.5 text-[10px] font-semibold text-brown hover:bg-brown/10"
                         >
                           Go to page
