@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await auth();
-  if (!session || session.user.role === "EXECUTIVE") {
+  const { error, session, orgWhere } = await getTenantSession();
+  if (error) return error;
+
+  if (session.user.role === "EXECUTIVE") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const period = await prisma.period.findFirst({ where: { isActive: true } });
+  const period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
   if (!period) {
     return NextResponse.json({ error: "No active period" }, { status: 404 });
   }
 
   const departments = await prisma.department.findMany({
+    where: orgWhere,
     orderBy: { sortOrder: "asc" },
     include: {
       objectives: true,

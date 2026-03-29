@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -14,12 +14,11 @@ const periodSchema = z.object({
 
 // GET: List all periods
 export async function GET() {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const periods = await prisma.period.findMany({
+    where: orgWhere,
     orderBy: [{ year: "desc" }, { month: "desc" }],
     include: {
       _count: { select: { submissions: true } },
@@ -45,10 +44,8 @@ export async function GET() {
 
 // POST: Create period
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgId, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const parsed = periodSchema.safeParse(body);
@@ -59,8 +56,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const existing = await prisma.period.findUnique({
-    where: { year_month: { year: parsed.data.year, month: parsed.data.month } },
+  const existing = await prisma.period.findFirst({
+    where: { year: parsed.data.year, month: parsed.data.month, ...orgWhere },
   });
   if (existing) {
     return NextResponse.json({ error: "Period already exists" }, { status: 409 });
@@ -70,9 +67,9 @@ export async function POST(req: NextRequest) {
     "July", "August", "September", "October", "November", "December"];
   const label = `${monthNames[parsed.data.month - 1]} ${parsed.data.year}`;
 
-  // If setting as active, deactivate others
+  // If setting as active, deactivate others within org
   if (parsed.data.isActive) {
-    await prisma.period.updateMany({ data: { isActive: false } });
+    await prisma.period.updateMany({ where: orgWhere, data: { isActive: false } });
   }
 
   const period = await prisma.period.create({
@@ -82,6 +79,7 @@ export async function POST(req: NextRequest) {
       month: parsed.data.month,
       deadline: new Date(parsed.data.deadline),
       isActive: parsed.data.isActive,
+      organizationId: orgId,
     },
   });
 
@@ -90,10 +88,8 @@ export async function POST(req: NextRequest) {
 
 // PUT: Update period (deadline, active status)
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const { id, deadline, isActive } = body;
@@ -102,9 +98,15 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
   }
 
-  // If setting as active, deactivate others first
+  // Verify period belongs to org
+  const existingPeriod = await prisma.period.findFirst({ where: { id, ...orgWhere } });
+  if (!existingPeriod) {
+    return NextResponse.json({ error: "Period not found" }, { status: 404 });
+  }
+
+  // If setting as active, deactivate others within org first
   if (isActive) {
-    await prisma.period.updateMany({ data: { isActive: false } });
+    await prisma.period.updateMany({ where: orgWhere, data: { isActive: false } });
   }
 
   const period = await prisma.period.update({
@@ -120,14 +122,18 @@ export async function PUT(req: NextRequest) {
 
 // DELETE: Delete period (only if no submissions)
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Verify period belongs to org
+  const existingPeriod = await prisma.period.findFirst({ where: { id, ...orgWhere } });
+  if (!existingPeriod) {
+    return NextResponse.json({ error: "Period not found" }, { status: 404 });
   }
 
   const count = await prisma.submission.count({ where: { periodId: id } });

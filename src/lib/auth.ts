@@ -23,6 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               ? { email: login }
               : { username: login },
             include: {
+              organization: { select: { id: true, name: true } },
               assignments: {
                 select: { departmentId: true, permission: true },
               },
@@ -45,6 +46,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             image: user.image,
             role: user.role,
             departmentId: user.departmentId,
+            organizationId: user.organizationId,
+            organizationName: user.organization.name,
             assignments: user.assignments.map((a) => ({
               departmentId: a.departmentId,
               permission: a.permission,
@@ -68,6 +71,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role as string;
         token.image = (user.image as string | null) ?? null;
         token.departmentId = user.departmentId as string | null;
+        token.organizationId = user.organizationId as string;
+        token.organizationName = user.organizationName as string;
         token.assignments = user.assignments as { departmentId: string; permission: string }[];
       }
       return token;
@@ -77,6 +82,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = token.role as "FUNCTION_HEAD" | "STRATEGY_MANAGER" | "EXECUTIVE";
       session.user.image = (token.image as string | null) ?? null;
       session.user.departmentId = (token.departmentId as string | null) ?? null;
+      session.user.organizationId = token.organizationId as string;
+      session.user.organizationName = token.organizationName as string;
       session.user.assignments = (token.assignments as { departmentId: string; permission: "EDIT" | "VIEW_ONLY" }[]) || [];
       return session;
     },

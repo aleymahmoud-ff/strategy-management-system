@@ -42,7 +42,7 @@ export function Navbar() {
 
   if (!session || pathname === "/login") return null;
 
-  const { name, email, role, image } = session.user;
+  const { name, email, role, image, organizationName } = session.user;
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role));
   const initials = name
     .split(" ")
@@ -93,6 +93,11 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {organizationName && (
+            <span className="rounded-md border border-brown/20 bg-brown/5 px-2.5 py-1 text-[10px] font-semibold tracking-[0.5px] text-brown">
+              {organizationName}
+            </span>
+          )}
           <span className="rounded-md border border-border bg-bg-mid px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[1.5px] text-text-sub">
             MAR 2026
           </span>

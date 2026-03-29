@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { userCreateSchema, userUpdateSchema } from "@/lib/validators";
 import bcrypt from "bcryptjs";
@@ -8,12 +8,11 @@ export const dynamic = "force-dynamic";
 
 // GET: List all users
 export async function GET() {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const users = await prisma.user.findMany({
+    where: orgWhere,
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -38,10 +37,8 @@ export async function GET() {
 
 // POST: Create user
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgId } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const parsed = userCreateSchema.safeParse(body);
@@ -71,6 +68,7 @@ export async function POST(req: NextRequest) {
       passwordHash,
       role,
       departmentId: role === "FUNCTION_HEAD" ? departmentId || null : null,
+      organizationId: orgId,
     },
     select: { id: true, email: true, name: true, role: true },
   });
@@ -80,16 +78,20 @@ export async function POST(req: NextRequest) {
 
 // PUT: Update user
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, session, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const { id, ...updateData } = body;
 
   if (!id) {
     return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  }
+
+  // Verify user belongs to org
+  const existingUser = await prisma.user.findFirst({ where: { id, ...orgWhere } });
+  if (!existingUser) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   const parsed = userUpdateSchema.safeParse(updateData);
@@ -123,10 +125,8 @@ export async function PUT(req: NextRequest) {
 
 // DELETE: Delete user
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, session, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");
@@ -141,6 +141,12 @@ export async function DELETE(req: NextRequest) {
       { error: "Cannot delete yourself" },
       { status: 400 }
     );
+  }
+
+  // Verify user belongs to org
+  const existingUser = await prisma.user.findFirst({ where: { id, ...orgWhere } });
+  if (!existingUser) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   await prisma.user.delete({ where: { id } });

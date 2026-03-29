@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { computeProgress, computeDeviations, deriveStatus } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role === "FUNCTION_HEAD") {
+  const { error, session, orgWhere } = await getTenantSession();
+  if (error) return error;
+
+  // FUNCTION_HEAD is not allowed on this route
+  if (session.user.role === "FUNCTION_HEAD") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,9 +20,9 @@ export async function GET(req: NextRequest) {
   let period;
   if (periodParam) {
     const [y, m] = periodParam.split("-").map(Number);
-    period = await prisma.period.findUnique({ where: { year_month: { year: y, month: m } } });
+    period = await prisma.period.findFirst({ where: { year: y, month: m, ...orgWhere } });
   } else {
-    period = await prisma.period.findFirst({ where: { isActive: true } });
+    period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
   }
 
   if (!period) {
@@ -28,6 +31,7 @@ export async function GET(req: NextRequest) {
 
   // Get all departments
   const departments = await prisma.department.findMany({
+    where: orgWhere,
     orderBy: { sortOrder: "asc" },
     include: {
       objectives: { orderBy: { sortOrder: "asc" } },

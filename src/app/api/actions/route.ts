@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -14,15 +14,13 @@ const actionSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const departmentId = req.nextUrl.searchParams.get("departmentId");
 
   const actions = await prisma.keyAction.findMany({
-    where: departmentId ? { departmentId } : undefined,
+    where: { department: orgWhere, ...(departmentId ? { departmentId } : {}) },
     orderBy: [{ departmentId: "asc" }, { sortOrder: "asc" }],
     include: { department: { select: { name: true } } },
   });
@@ -31,10 +29,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const parsed = actionSchema.safeParse(body);
@@ -43,6 +39,12 @@ export async function POST(req: NextRequest) {
       { error: "Invalid data", details: parsed.error.flatten() },
       { status: 400 }
     );
+  }
+
+  // Verify department belongs to org
+  const dept = await prisma.department.findFirst({ where: { id: parsed.data.departmentId, ...orgWhere } });
+  if (!dept) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
   }
 
   const count = await prisma.keyAction.count({
@@ -65,16 +67,22 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const { id, ...updateData } = body;
 
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Verify action's department belongs to org
+  const existing = await prisma.keyAction.findFirst({
+    where: { id, department: orgWhere },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Action not found" }, { status: 404 });
   }
 
   const action = await prisma.keyAction.update({
@@ -91,14 +99,20 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Verify action's department belongs to org
+  const existing = await prisma.keyAction.findFirst({
+    where: { id, department: orgWhere },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Action not found" }, { status: 404 });
   }
 
   await prisma.keyActionEntry.deleteMany({ where: { keyActionId: id } });

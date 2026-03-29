@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -13,12 +13,11 @@ const createSchema = z.object({
 
 // GET: List all departments
 export async function GET() {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const departments = await prisma.department.findMany({
+    where: orgWhere,
     orderBy: { sortOrder: "asc" },
     include: {
       _count: { select: { objectives: true, keyActions: true, users: true, submissions: true } },
@@ -30,10 +29,8 @@ export async function GET() {
 
 // POST: Create a new department
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgId, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
@@ -49,18 +46,18 @@ export async function POST(req: NextRequest) {
   // Generate slug from name
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-  // Check for duplicate slug
-  const existing = await prisma.department.findUnique({ where: { slug } });
+  // Check for duplicate slug within org
+  const existing = await prisma.department.findFirst({ where: { slug, ...orgWhere } });
   if (existing) {
     return NextResponse.json({ error: "A department with a similar name already exists" }, { status: 409 });
   }
 
-  // Get next sort order
-  const maxOrder = await prisma.department.aggregate({ _max: { sortOrder: true } });
+  // Get next sort order within org
+  const maxOrder = await prisma.department.aggregate({ where: orgWhere, _max: { sortOrder: true } });
   const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
 
   const department = await prisma.department.create({
-    data: { name, slug, headName, initials: initials.toUpperCase(), sortOrder },
+    data: { name, slug, headName, initials: initials.toUpperCase(), sortOrder, organizationId: orgId },
   });
 
   return NextResponse.json(department, { status: 201 });
@@ -68,16 +65,20 @@ export async function POST(req: NextRequest) {
 
 // PUT: Update a department
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const { id, name, headName, initials } = body;
 
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Verify department belongs to org
+  const dept = await prisma.department.findFirst({ where: { id, ...orgWhere } });
+  if (!dept) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
   }
 
   const data: Record<string, string> = {};
@@ -92,14 +93,18 @@ export async function PUT(req: NextRequest) {
 
 // DELETE: Remove a department (only if no submissions exist)
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
+  }
+
+  // Verify department belongs to org
+  const dept = await prisma.department.findFirst({ where: { id, ...orgWhere } });
+  if (!dept) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
   }
 
   // Check for submissions

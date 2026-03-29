@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -13,10 +13,8 @@ const assignmentSchema = z.object({
 
 // PUT: Set all assignments for a user (replaces existing)
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session || session.user.role !== "STRATEGY_MANAGER") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, orgWhere } = await getTenantSession("STRATEGY_MANAGER");
+  if (error) return error;
 
   const body = await req.json();
   const { userId, assignments } = body as {
@@ -28,11 +26,28 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "userId required" }, { status: 400 });
   }
 
+  // Verify user belongs to org
+  const user = await prisma.user.findFirst({ where: { id: userId, ...orgWhere } });
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
   // Validate each assignment
   for (const a of assignments || []) {
     const parsed = assignmentSchema.safeParse({ userId, ...a });
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid assignment data" }, { status: 400 });
+    }
+  }
+
+  // Verify all departmentIds belong to the org
+  const departmentIds = (assignments || []).map((a: { departmentId: string }) => a.departmentId);
+  if (departmentIds.length > 0) {
+    const deptCount = await prisma.department.count({
+      where: { id: { in: departmentIds }, ...orgWhere },
+    });
+    if (deptCount !== departmentIds.length) {
+      return NextResponse.json({ error: "One or more departments not found" }, { status: 404 });
     }
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { saveDraftSchema } from "@/lib/validators";
 
@@ -10,12 +10,16 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ departmentId: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, session, orgWhere } = await getTenantSession();
+  if (error) return error;
 
   const { departmentId } = await params;
+
+  // Verify department belongs to org
+  const deptCheck = await prisma.department.findFirst({ where: { id: departmentId, ...orgWhere } });
+  if (!deptCheck) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
+  }
 
   // Check access: admin sees all, function heads need an assignment
   const isAdmin = session.user.role === "STRATEGY_MANAGER";
@@ -29,9 +33,9 @@ export async function GET(
   const periodIdParam = req.nextUrl.searchParams.get("periodId");
   let period;
   if (periodIdParam && session.user.role === "STRATEGY_MANAGER") {
-    period = await prisma.period.findUnique({ where: { id: periodIdParam } });
+    period = await prisma.period.findFirst({ where: { id: periodIdParam, ...orgWhere } });
   } else {
-    period = await prisma.period.findFirst({ where: { isActive: true } });
+    period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
   }
   if (!period) {
     return NextResponse.json({ error: "No active period" }, { status: 404 });
@@ -142,12 +146,16 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ departmentId: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, session, orgWhere } = await getTenantSession();
+  if (error) return error;
 
   const { departmentId } = await params;
+
+  // Verify department belongs to org
+  const deptCheck = await prisma.department.findFirst({ where: { id: departmentId, ...orgWhere } });
+  if (!deptCheck) {
+    return NextResponse.json({ error: "Department not found" }, { status: 404 });
+  }
 
   const isAdmin = session.user.role === "STRATEGY_MANAGER";
   const assignment = session.user.assignments?.find((a) => a.departmentId === departmentId);
@@ -162,9 +170,9 @@ export async function PUT(
   const targetPeriodId = isAdmin && body.periodId ? body.periodId : null;
   let period;
   if (targetPeriodId) {
-    period = await prisma.period.findUnique({ where: { id: targetPeriodId } });
+    period = await prisma.period.findFirst({ where: { id: targetPeriodId, ...orgWhere } });
   } else {
-    period = await prisma.period.findFirst({ where: { isActive: true } });
+    period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
   }
   if (!period) {
     return NextResponse.json({ error: "No active period" }, { status: 404 });

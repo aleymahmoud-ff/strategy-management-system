@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getTenantSession } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { error, session } = await getTenantSession();
+  if (error) return error;
 
   const { currentPassword, newPassword } = await request.json();
 

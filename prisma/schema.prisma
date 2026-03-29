@@ -8,19 +8,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]
+  departments Department[]
+  periods     Period[]
+}
+
 model User {
-  id           String           @id @default(cuid())
-  email        String           @unique
-  username     String?          @unique // Login with username (e.g. momen.zaki)
-  name         String
-  image        String?          // Profile photo URL
-  passwordHash String
-  role         String           // FUNCTION_HEAD | STRATEGY_MANAGER | EXECUTIVE
-  departmentId String?          // Legacy — kept for backward compat
-  department   Department?      @relation(fields: [departmentId], references: [id])
-  assignments  UserDepartment[]
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id             String           @id @default(cuid())
+  email          String           @unique
+  username       String?          @unique // Login with username (e.g. momen.zaki)
+  name           String
+  image          String?          // Profile photo URL
+  passwordHash   String
+  role           String           // FUNCTION_HEAD | STRATEGY_MANAGER | EXECUTIVE
+  departmentId   String?          // Legacy — kept for backward compat
+  department     Department?      @relation(fields: [departmentId], references: [id])
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  assignments    UserDepartment[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model UserDepartment {
@@ -36,19 +49,23 @@ model UserDepartment {
 }
 
 model Department {
-  id          String           @id @default(cuid())
-  slug        String           @unique
-  name        String
-  headName    String
-  initials    String
-  sortOrder   Int              @default(0)
-  users       User[]
-  assignments UserDepartment[]
-  objectives  Objective[]
-  keyActions  KeyAction[]
-  submissions Submission[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id             String           @id @default(cuid())
+  slug           String
+  name           String
+  headName       String
+  initials       String
+  sortOrder      Int              @default(0)
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  users          User[]
+  assignments    UserDepartment[]
+  objectives     Objective[]
+  keyActions     KeyAction[]
+  submissions    Submission[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, slug])
 }
 
 model Objective {
@@ -87,16 +104,18 @@ model KeyAction {
 }
 
 model Period {
-  id          String       @id @default(cuid())
-  label       String
-  year        Int
-  month       Int
-  deadline    DateTime
-  isActive    Boolean      @default(false)
-  submissions Submission[]
-  createdAt   DateTime     @default(now())
+  id             String       @id @default(cuid())
+  label          String
+  year           Int
+  month          Int
+  deadline       DateTime
+  isActive       Boolean      @default(false)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  submissions    Submission[]
+  createdAt      DateTime     @default(now())
 
-  @@unique([year, month])
+  @@unique([organizationId, year, month])
 }
 
 model Submission {

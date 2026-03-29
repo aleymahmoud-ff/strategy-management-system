@@ -30,6 +30,12 @@ async function main() {
   await prisma.user.deleteMany().catch(() => {});
   await prisma.department.deleteMany().catch(() => {});
   await prisma.period.deleteMany().catch(() => {});
+  await prisma.organization.deleteMany().catch(() => {});
+
+  // Organization
+  const org = await prisma.organization.create({
+    data: { name: "Demo Corp", slug: "demo-corp" },
+  });
 
   // Period
   const period = await prisma.period.create({
@@ -39,17 +45,18 @@ async function main() {
       month: 3,
       deadline: new Date("2026-03-07T23:59:59Z"),
       isActive: true,
+      organizationId: org.id,
     },
   });
 
   // Departments
   const [ops, fin, hr, tech, sales, mkt] = await Promise.all([
-    prisma.department.create({ data: { slug: "ops", name: "Operations", headName: "Sarah K.", initials: "SK", sortOrder: 1 } }),
-    prisma.department.create({ data: { slug: "fin", name: "Finance", headName: "James M.", initials: "JM", sortOrder: 2 } }),
-    prisma.department.create({ data: { slug: "hr", name: "Human Resources", headName: "Layla A.", initials: "LA", sortOrder: 3 } }),
-    prisma.department.create({ data: { slug: "tech", name: "Technology", headName: "Rami H.", initials: "RH", sortOrder: 4 } }),
-    prisma.department.create({ data: { slug: "sales", name: "Commercial", headName: "Omar T.", initials: "OT", sortOrder: 5 } }),
-    prisma.department.create({ data: { slug: "mkt", name: "Marketing", headName: "Nora S.", initials: "NS", sortOrder: 6 } }),
+    prisma.department.create({ data: { slug: "ops", name: "Operations", headName: "Sarah K.", initials: "SK", sortOrder: 1, organizationId: org.id } }),
+    prisma.department.create({ data: { slug: "fin", name: "Finance", headName: "James M.", initials: "JM", sortOrder: 2, organizationId: org.id } }),
+    prisma.department.create({ data: { slug: "hr", name: "Human Resources", headName: "Layla A.", initials: "LA", sortOrder: 3, organizationId: org.id } }),
+    prisma.department.create({ data: { slug: "tech", name: "Technology", headName: "Rami H.", initials: "RH", sortOrder: 4, organizationId: org.id } }),
+    prisma.department.create({ data: { slug: "sales", name: "Commercial", headName: "Omar T.", initials: "OT", sortOrder: 5, organizationId: org.id } }),
+    prisma.department.create({ data: { slug: "mkt", name: "Marketing", headName: "Nora S.", initials: "NS", sortOrder: 6, organizationId: org.id } }),
   ]);
 
   // ─── Objectives (with 12-month baselines & targets) ─────────
@@ -238,14 +245,14 @@ async function main() {
 
   const hash = await bcrypt.hash("sms2026", 12);
   const [, , sarah, james, layla, rami, omar, nora] = await Promise.all([
-    prisma.user.create({ data: { email: "admin@sms.local", name: "Strategy Office", passwordHash: hash, role: "STRATEGY_MANAGER" } }),
-    prisma.user.create({ data: { email: "exec@sms.local", name: "Board Member", passwordHash: hash, role: "EXECUTIVE" } }),
-    prisma.user.create({ data: { email: "sarah@sms.local", name: "Sarah K.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: ops.id } }),
-    prisma.user.create({ data: { email: "james@sms.local", name: "James M.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: fin.id } }),
-    prisma.user.create({ data: { email: "layla@sms.local", name: "Layla A.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: hr.id } }),
-    prisma.user.create({ data: { email: "rami@sms.local", name: "Rami H.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: tech.id } }),
-    prisma.user.create({ data: { email: "omar@sms.local", name: "Omar T.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: sales.id } }),
-    prisma.user.create({ data: { email: "nora@sms.local", name: "Nora S.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: mkt.id } }),
+    prisma.user.create({ data: { email: "admin@sms.local", name: "Strategy Office", passwordHash: hash, role: "STRATEGY_MANAGER", organizationId: org.id } }),
+    prisma.user.create({ data: { email: "exec@sms.local", name: "Board Member", passwordHash: hash, role: "EXECUTIVE", organizationId: org.id } }),
+    prisma.user.create({ data: { email: "sarah@sms.local", name: "Sarah K.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: ops.id, organizationId: org.id } }),
+    prisma.user.create({ data: { email: "james@sms.local", name: "James M.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: fin.id, organizationId: org.id } }),
+    prisma.user.create({ data: { email: "layla@sms.local", name: "Layla A.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: hr.id, organizationId: org.id } }),
+    prisma.user.create({ data: { email: "rami@sms.local", name: "Rami H.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: tech.id, organizationId: org.id } }),
+    prisma.user.create({ data: { email: "omar@sms.local", name: "Omar T.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: sales.id, organizationId: org.id } }),
+    prisma.user.create({ data: { email: "nora@sms.local", name: "Nora S.", passwordHash: hash, role: "FUNCTION_HEAD", departmentId: mkt.id, organizationId: org.id } }),
   ]);
 
   // ─── Department Assignments (with permissions) ──────────
