@@ -67,11 +67,6 @@ export async function POST(req: NextRequest) {
     "July", "August", "September", "October", "November", "December"];
   const label = `${monthNames[parsed.data.month - 1]} ${parsed.data.year}`;
 
-  // If setting as active, deactivate others within org
-  if (parsed.data.isActive) {
-    await prisma.period.updateMany({ where: orgWhere, data: { isActive: false } });
-  }
-
   const period = await prisma.period.create({
     data: {
       label,
@@ -102,11 +97,6 @@ export async function PUT(req: NextRequest) {
   const existingPeriod = await prisma.period.findFirst({ where: { id, ...orgWhere } });
   if (!existingPeriod) {
     return NextResponse.json({ error: "Period not found" }, { status: 404 });
-  }
-
-  // If setting as active, deactivate others within org first
-  if (isActive) {
-    await prisma.period.updateMany({ where: orgWhere, data: { isActive: false } });
   }
 
   const period = await prisma.period.update({

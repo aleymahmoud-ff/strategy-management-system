@@ -26,9 +26,28 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden — no edit access" }, { status: 403 });
   }
 
-  const period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
-  if (!period) {
-    return NextResponse.json({ error: "No active period" }, { status: 404 });
+  // Period selection: explicit periodId from body, otherwise the most recent active period.
+  // Function heads may only submit against periods that are currently active.
+  let body: { periodId?: string } = {};
+  try { body = await req.json(); } catch {}
+  const targetPeriodId = body.periodId || null;
+  let period;
+  if (targetPeriodId) {
+    const where = isAdmin
+      ? { id: targetPeriodId, ...orgWhere }
+      : { id: targetPeriodId, isActive: true, ...orgWhere };
+    period = await prisma.period.findFirst({ where });
+    if (!period) {
+      return NextResponse.json({ error: "Period not available" }, { status: 404 });
+    }
+  } else {
+    period = await prisma.period.findFirst({
+      where: { isActive: true, ...orgWhere },
+      orderBy: [{ year: "desc" }, { month: "desc" }],
+    });
+    if (!period) {
+      return NextResponse.json({ error: "No active period" }, { status: 404 });
+    }
   }
 
   const submission = await prisma.submission.findUnique({

@@ -77,6 +77,15 @@ export default function PeriodsPage() {
     loadPeriods();
   }
 
+  async function setInactive(id: string) {
+    await apiFetch("/api/periods", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, isActive: false }),
+    });
+    loadPeriods();
+  }
+
   function startEditDeadline(p: Period) {
     setEditingId(p.id);
     setEditDeadline(p.deadline.split("T")[0]);
@@ -167,7 +176,12 @@ export default function PeriodsPage() {
                     </td>
                     <td className="border-b border-border/50 px-4 py-3">
                       {p.isActive ? (
-                        <span className="inline-flex rounded-md bg-green-bg px-2.5 py-0.5 text-[11px] font-semibold text-green">Active</span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex rounded-md bg-green-bg px-2.5 py-0.5 text-[11px] font-semibold text-green">Active</span>
+                          <button onClick={() => setInactive(p.id)} className="text-[11px] text-text-mut hover:text-text-bd hover:underline">
+                            Set Inactive
+                          </button>
+                        </div>
                       ) : pastDeadline ? (
                         <span className="inline-flex rounded-md bg-bg-mid px-2.5 py-0.5 text-[11px] font-semibold text-text-mut">Closed</span>
                       ) : (

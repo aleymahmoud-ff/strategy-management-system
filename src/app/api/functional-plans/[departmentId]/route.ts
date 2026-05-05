@@ -29,16 +29,26 @@ export async function GET(
   }
   const userPermission = isAdmin ? "EDIT" : (assignment?.permission || "VIEW_ONLY");
 
-  // Admin can select any period via query param
+  // Period selection: explicit periodId from query, otherwise the most recent active period.
+  // Function heads may only target periods that are currently active. Admins may target any period in the org.
   const periodIdParam = req.nextUrl.searchParams.get("periodId");
   let period;
-  if (periodIdParam && session.user.role === "STRATEGY_MANAGER") {
-    period = await prisma.period.findFirst({ where: { id: periodIdParam, ...orgWhere } });
+  if (periodIdParam) {
+    const where = isAdmin
+      ? { id: periodIdParam, ...orgWhere }
+      : { id: periodIdParam, isActive: true, ...orgWhere };
+    period = await prisma.period.findFirst({ where });
+    if (!period) {
+      return NextResponse.json({ error: "Period not available" }, { status: 404 });
+    }
   } else {
-    period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
-  }
-  if (!period) {
-    return NextResponse.json({ error: "No active period" }, { status: 404 });
+    period = await prisma.period.findFirst({
+      where: { isActive: true, ...orgWhere },
+      orderBy: [{ year: "desc" }, { month: "desc" }],
+    });
+    if (!period) {
+      return NextResponse.json({ error: "No active period" }, { status: 404 });
+    }
   }
 
   const department = await prisma.department.findUnique({
@@ -165,17 +175,27 @@ export async function PUT(
     return NextResponse.json({ error: "Forbidden — no edit access" }, { status: 403 });
   }
 
-  // Admin can target any period via body
+  // Period selection: explicit periodId from body, otherwise the most recent active period.
+  // Function heads may only save against periods that are currently active.
   const body = await req.json();
-  const targetPeriodId = isAdmin && body.periodId ? body.periodId : null;
+  const targetPeriodId = body.periodId || null;
   let period;
   if (targetPeriodId) {
-    period = await prisma.period.findFirst({ where: { id: targetPeriodId, ...orgWhere } });
+    const where = isAdmin
+      ? { id: targetPeriodId, ...orgWhere }
+      : { id: targetPeriodId, isActive: true, ...orgWhere };
+    period = await prisma.period.findFirst({ where });
+    if (!period) {
+      return NextResponse.json({ error: "Period not available" }, { status: 404 });
+    }
   } else {
-    period = await prisma.period.findFirst({ where: { isActive: true, ...orgWhere } });
-  }
-  if (!period) {
-    return NextResponse.json({ error: "No active period" }, { status: 404 });
+    period = await prisma.period.findFirst({
+      where: { isActive: true, ...orgWhere },
+      orderBy: [{ year: "desc" }, { month: "desc" }],
+    });
+    if (!period) {
+      return NextResponse.json({ error: "No active period" }, { status: 404 });
+    }
   }
 
   let submission = await prisma.submission.findUnique({

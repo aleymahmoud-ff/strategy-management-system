@@ -58,17 +58,20 @@ export default function SubmissionFormPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Admin period selector
+  // Period selector — populated with currently-active periods so users can switch month.
   const [periods, setPeriods] = useState<PeriodOption[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
 
-  // Load periods list for admin
   useEffect(() => {
     apiFetch("/api/periods")
       .then((r) => r.ok ? r.json() : [])
       .then((data) => {
         if (Array.isArray(data)) {
-          setPeriods(data.map((p: { id: string; label: string }) => ({ id: p.id, label: p.label })));
+          setPeriods(
+            data
+              .filter((p: { isActive: boolean }) => p.isActive)
+              .map((p: { id: string; label: string }) => ({ id: p.id, label: p.label }))
+          );
         }
       })
       .catch(() => {});
@@ -94,6 +97,12 @@ export default function SubmissionFormPage() {
   }
 
   useEffect(() => {
+    // Discard any pending auto-save before switching months — otherwise the debounced
+    // PUT would fire with the previous period's edits but the new period's selectedPeriodId.
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
     loadFormData(selectedPeriodId || undefined);
   }, [departmentId, selectedPeriodId]);
 
@@ -175,10 +184,14 @@ export default function SubmissionFormPage() {
     setSubmitting(true);
     // Save current state first
     await saveDraft(data.objectives, data.actions);
-    // Then submit
+    // Then submit — explicitly target the period the user is editing.
     const res = await apiFetch(
       `/api/functional-plans/${departmentId}/submit`,
-      { method: "POST" }
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ periodId: selectedPeriodId || data.period.id }),
+      }
     );
     if (res.ok) {
       setSubmitted(true);
@@ -222,22 +235,33 @@ export default function SubmissionFormPage() {
 
   return (
     <main className="mx-auto w-full max-w-[900px] flex-1 p-8">
-      {/* Admin Period Selector */}
-      {data.isAdmin && periods.length > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-bg-card px-5 py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Period:</span>
-          <select
-            value={selectedPeriodId || data.period.id}
-            onChange={(e) => setSelectedPeriodId(e.target.value)}
-            className="rounded-lg border border-border bg-bg-page px-3 py-1.5 text-[13px] font-medium text-text-hd focus:border-brown/40 focus:outline-none"
-          >
-            {periods.map((p) => (
-              <option key={p.id} value={p.id}>{p.label}</option>
-            ))}
-          </select>
-          <span className="text-[11px] text-text-mut">
-            Submission: <strong className={data.submission.status === "SUBMITTED" ? "text-green" : "text-amber"}>{data.submission.status === "SUBMITTED" ? "Submitted" : "Draft"}</strong>
-          </span>
+      {/* Period Selector — visible whenever multiple active months exist (admin or function head) */}
+      {periods.length > 1 && (
+        <div className="mb-4 rounded-xl border border-border bg-bg-card px-5 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.5px] text-text-sub">Period:</span>
+            <select
+              value={selectedPeriodId || data.period.id}
+              onChange={(e) => setSelectedPeriodId(e.target.value)}
+              className="rounded-lg border border-border bg-bg-page px-3 py-1.5 text-[13px] font-medium text-text-hd focus:border-brown/40 focus:outline-none"
+            >
+              {periods.map((p) => (
+                <option key={p.id} value={p.id}>{p.label}</option>
+              ))}
+            </select>
+            <span className="text-[11px] text-text-mut">
+              Submission: <strong className={data.submission.status === "SUBMITTED" ? "text-green" : "text-amber"}>{data.submission.status === "SUBMITTED" ? "Submitted" : "Draft"}</strong>
+            </span>
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-text-mut">
+            You are entering data for <strong className="text-text-bd">{data.period.label}</strong>. All edits and your submission will be saved against this month only. Switch the period above before making changes if you meant a different month.
+          </p>
+        </div>
+      )}
+
+      {periods.length === 1 && (
+        <div className="mb-4 rounded-xl border border-border bg-bg-card px-5 py-3 text-[11px] text-text-mut">
+          You are entering data for <strong className="text-text-bd">{data.period.label}</strong>. All edits and your submission will be saved against this month.
         </div>
       )}
 
@@ -324,9 +348,14 @@ export default function SubmissionFormPage() {
               Confirm Submission
             </h3>
             <p className="mt-2 text-[13px] text-text-sub">
-              You are about to submit the {data.department.name} functional plan
-              for {data.period.label}. This action cannot be undone.
+              You are about to submit the {data.department.name} functional plan for{" "}
+              <strong className="text-text-hd">{data.period.label}</strong>. The data you entered will be saved against this month only and the submission cannot be undone.
             </p>
+            {periods.length > 1 && (
+              <p className="mt-2 text-[12px] text-amber">
+                Multiple months are open. If you meant a different month, cancel and switch the Period selector first.
+              </p>
+            )}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
